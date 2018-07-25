@@ -1,0 +1,15 @@
+<%@page import="edu.usc.polygraph.website.MySQLResponse.MySQLStatus"%>
+<%@page import="edu.usc.polygraph.website.MySQLResponse"%>
+<%@page import="edu.usc.polygraph.website.MySQL"%>
+<%@ page import="java.sql.*"%>
+<%
+	
+		
+		String name = request.getParameter("name");
+		//MySQLResponse i = MySQL.updateAppName(userid, appid, name);
+		MySQLResponse i= new MySQLResponse();
+		i.msg = "Saved";
+		session.setAttribute("appName", name);
+		out.print(i.msg);
+	
+%>

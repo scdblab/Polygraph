@@ -1,0 +1,26 @@
+<%@page import="edu.usc.stalemeter.website.Common"%>
+<%@page import="edu.usc.stalemeter.codegenerator.CodeGeneratorFunctions"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="edu.usc.stalemeter.website.MySQLResponse.MySQLStatus"%>
+<%@page import="edu.usc.stalemeter.website.MySQLResponse"%>
+<%@page import="edu.usc.stalemeter.website.MySQL"%>
+<%@ page import="java.sql.*"%>
+<%
+	if ((session.getAttribute("userid") == null) || (session.getAttribute("userid") == "")) {
+		out.print("You are not logged in<br/><a href=\"index.jsp\">Please Login</a>");
+	} else {
+		int userid = (int) session.getAttribute("userid");
+		int appid = (int) session.getAttribute("appid");
+		String appName = request.getParameter("appName");
+		
+		ArrayList<Integer> ids = MySQL.getAppTrans(userid, appid);
+		ArrayList<String> trans = new ArrayList<String>();
+		for (int i = 0; i < ids.size(); i++) {
+			MySQLResponse result = MySQL.loadTrans(userid, appid, ids.get(i));
+			trans.add(result.msg);
+		}
+		String er = MySQL.loadER(userid, appid).msg;
+		ArrayList<String> result = CodeGeneratorFunctions.getCodeSnippet(er, trans, appName);		
+		Common.export(response, Common.getZipFile(result, userid, appid));
+	}
+%>

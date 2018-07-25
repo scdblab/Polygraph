@@ -1,0 +1,133 @@
+<%-- 
+    Document   : index
+    Created on : Aug 22, 2017, 2:06:23 PM
+    Author     : yaz
+--%>
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+    <link href="js/style.css" type="text/css" rel="stylesheet" />
+                  <link rel="stylesheet" href="css/style.css" type="text/css">
+                  <link rel="stylesheet" href="css/style2.css" type="text/css">
+                         <script src="js/itpoverlay.js" type="text/javascript"></script>
+                  
+               <script src="js/common.js" type="text/javascript"></script>
+       
+       <script type="text/javascript" src="javascript.js"></script>
+        
+  		<script src="moment.js"></script>
+		<script src="Chart.js"></script>
+		<script src="utils.js"></script>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+         
+        <title>Demo Settings</title>
+		
+    <style type="text/css">
+  
+    </style>
+  
+    <%@ page import="demo.*"%>
+    <%@ page import="java.sql.*"%>
+    
+    <% String ssId=(String)session.getAttribute("ssId");
+    boolean singleThread=false;
+    if (ssId!=null){
+       DemoMain demo= DemoMain.demos.get(ssId);
+       if (demo==null){
+    	   ssId=null;
+       }
+       else{
+    	   if (demo.accThreads.size()==1){
+    		   singleThread=true;
+    	   }
+       }
+    }
+    %>
+    <script type="text/javascript">sId="<%=ssId%>";
+    if (sId==="null"){
+    	alert("Session not exist. Please visit Demo main page");
+    }
+    
+    singleThread="<%=singleThread%>";
+   
+    </script>
+   
+    </head>
+    <body id="body2" class= "myBody" onload="loadSettings()" >
+   
+   
+        <table class="menut" style="width:100%"><tr style="background-color:#134F5C; height: 50px;"><td style="width: 190px" ><img style="width:150px; height:50px" src="img/dblab.png" /></td>
+                <td style="align-content: center; color: white; font-size: x-large" align="center"> <strong>POLYGRAPH</strong><br/> <label style="font-size: large">(Demonstration Settings)</label></td>
+            </tr>
+            <tr ><td style="background-color: #134F5C; vertical-align: top;height: 720px;">
+                    <table class="menut" >
+                        <tr>
+                            <td style="width: 190px; height: 103px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style="margin-left: 0px;padding-left: 0px" >Demo</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoSettings.jsp" >Settings</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoDesc.jsp" >Description</a></li> 
+
+                                            
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        <tr>
+                            <td style="width: 190px; height: 145px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style=" pointer-events: none;cursor: default;" >Polygraph</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="mont.jsp" >Monitoring</a></li> 
+                                             <li><a class="menu" style="margin-left: 35px;" href="Overview.jsp" >Overview</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="Papers.jsp" >Papers</a></li> 
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                        <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" href="about.jsp" >About us</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                         <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" target="_blank"  href="http://dblab.usc.edu" >http://dblab.usc.edu</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                         
+                        
+                        
+                    </table>
+                 <!-- > Body of Page<-->
+                <td  style="vertical-align:top; padding-top: 50px" align="center">
+                 <form>
+  
+  
+
+                 <table>
+                 
+                 <tr> <td class= "menu" rowspan="2"> Demo Threads</td> <td class= "menu"><input id="s" type="radio" name="threads" value="st">Single-Threaded</td> </tr>
+                 <tr> <td class= "menu"><input id="m" type="radio" name="threads" value="mt">Multi-Threaded </td></tr>
+               <tr> <td style="height:20px;" align="center" colspan="2"><div align="center" id="buttonResult"></div></td>
+                </tr>
+                  <tr> <td style="padding-top: 0px" align="center" colspan="2"><input style=""" class="myButton"  id= "applyT" type="submit" value="Apply" onclick="modifyThreads()" /> </td></tr>
+               
+                 </table>  
+                   </form> 
+                </td>
+            
+            </tr>
+            
+                
+        </table>
+        
+          
+
+
+    </body>
+</html>

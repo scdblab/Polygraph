@@ -1,0 +1,5 @@
+{"application":
+	{"name":"APPNAME_1","entities":[
+		{"name":"Account","properties":["Balance"]}
+	]}
+}

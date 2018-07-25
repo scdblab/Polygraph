@@ -1,0 +1,137 @@
+
+<%@page import="edu.usc.stalemeter.website.StaleLog"%>
+<%@page import="edu.usc.stalemeter.Entity"%>
+<%@page import="edu.usc.stalemeter.Property"%>
+<%@page import="edu.usc.stalemeter.LogRecord"%>
+<%@page import="edu.usc.stalemeter.KafkaScripts"%>
+<%@page import="java.util.ArrayList"%>
+<%
+	if ((session.getAttribute("userid") == null) || (session.getAttribute("userid") == "")) {
+		out.print("You are not logged in<br/><a href=\"index.jsp\">Please Login</a>");
+	} else {
+		
+		String appName = (String) session.getAttribute("appName");
+		String topic = "STATS_" + appName;
+		
+		StaleLog stale  = KafkaScripts.getStaleLog();
+		ArrayList<LogRecord> results = KafkaScripts.runTest(stale);
+		LogRecord staleLog = null;
+		for(LogRecord r : results){
+			if(stale.tid.equals(r.getId())){
+				staleLog = r;
+				break;
+			}
+		}
+		//System.out.println(appName + "_currentStale : " + staleLog.getId());
+		session.setAttribute(appName + "_currentStaleLog", stale);
+		session.setAttribute(appName + "_currentStale", staleLog);
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+<script src="js/common.js" type="text/javascript"></script>
+<script src="js/vTest.js" type="text/javascript"></script>
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<style>
+table.evenOdd tr:nth-child(even) {
+	background: #FFF
+}
+
+table.evenOdd tr:nth-child(odd) {
+	background: #CCC
+}
+
+body, html {
+	font-family: sans-serif;
+}
+
+.Mitem {
+	height: 20px;
+}
+
+.vis-item.Read {
+	background-color: #a5ffa9;
+	border-color: #4caf50;
+}
+
+.vis-item.vis-selected.Read {
+	/* custom colors for selected orange items */
+	background-color: #31e638;
+	border-color: #37793a;
+}
+
+.vis-item.Write {
+	background-color: #c9d0f9;
+	border-color: #3F51B5;
+}
+
+.vis-item.vis-selected.Write {
+	/* custom colors for selected orange items */
+	background-color: #97a6ff;
+	border-color: #28378a;
+}
+
+.vis-item.Stale {
+	background-color: #ffc0c0;
+	border-color: #ff0000;
+}
+
+.vis-item.vis-selected.Stale {
+	/* custom colors for selected orange items */
+	background-color: #f56262;
+	border-color: #8a0000;
+}
+
+.Read {
+	background-color: #a5ffa9;
+	border-color: #4caf50;
+}
+
+.Write {
+	background-color: #c9d0f9;
+	border-color: #3F51B5;
+}
+
+.Stale {
+	background-color: #ffc0c0;
+	border-color: #ff0000;
+}
+</style>
+<script src="js/vis.js"></script>
+<link href="css/vis.css" rel="stylesheet" type="text/css" />
+</head>
+<body id="body" style="text-align: center;">
+	<div id="visualization">
+    <div class="menu">
+        <input type="button" id="getMore" value="Get More Logs" onclick="getMore(<%=stale.lastReadOffset%>,<%=stale.lastWriteOffset%>,'<%=appName%>', true)"/>
+        <input type="button" id="zoomIn" value="Zoom in"/>
+        <input type="button" id="zoomOut" value="Zoom out"/>
+        <input type="button" id="moveLeft" value="Move left"/>
+        <input type="button" id="moveRight" value="Move right"/>
+    </div></div>
+	<script type="text/javascript">
+	window.onload = function () {
+	getMore(<%=stale.lastReadOffset%>,<%=stale.lastWriteOffset%>,"<%=appName%>", true);
+	// attach events to the navigation buttons
+	document.getElementById('zoomIn').onclick = function() {
+		zoom(-0.2);
+	};
+	document.getElementById('zoomOut').onclick = function() {
+		zoom(0.2);
+	};
+	document.getElementById('moveLeft').onclick = function() {
+		move(0.2);
+	};
+	document.getElementById('moveRight').onclick = function() {
+		move(-0.2);
+	};
+	}
+	</script>
+	<div id="a"></div>
+</body>
+</html>
+<%
+	}
+%>

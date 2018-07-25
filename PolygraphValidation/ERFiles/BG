@@ -1,0 +1,7 @@
+{"application":{ "name":"BG", 
+
+"entities":[{"name":"MEMBER","properties":["FRIEND_CNT","PENDING_CNT"]}]
+
+
+}
+}

@@ -1,0 +1,56 @@
+<%@page import="edu.usc.polygraph.StatsConsumer"%>
+<%@page import="edu.usc.polygraph.website.StaleLog"%>
+<%@page import="edu.usc.polygraph.Entity"%>
+<%@page import="edu.usc.polygraph.Property"%>
+<%@page import="edu.usc.polygraph.LogRecord"%>
+<%@page import="edu.usc.polygraph.KafkaScripts"%>
+<%@page import="java.util.ArrayList"%>
+<% 
+	if ((session.getAttribute("appNameM") == null) || (session.getAttribute("appNameM") == "")) {
+		request.setAttribute("info", "error");
+		request.setAttribute("errorMSG", "Missing inputs.");
+		request.getRequestDispatcher("mont.jsp").forward(request, response);
+	} else {
+		String appName = (String) session.getAttribute("appNameM");
+		String topic = "STATS_" + appName;
+
+		StatsConsumer consumerStale = (StatsConsumer) session.getAttribute(topic + "_consumerStale");
+		if (consumerStale == null) {
+			request.setAttribute("info", "error");
+			request.setAttribute("errorMSG", "Session timed out.");
+			request.getRequestDispatcher("mont.jsp").forward(request, response);
+		} else {
+			String key = request.getParameter("key");
+			String type = request.getParameter("type");
+			if ((key == null) || (key == "") || (type == null) || (type == "")) {
+				request.setAttribute("info", "error");
+				request.setAttribute("errorMSG", "Missing key or type.");
+				request.getRequestDispatcher("mont.jsp").forward(request, response);
+			} else {
+				ArrayList<StaleLog> list = null;
+				if (type.equals("e")) {
+					list = consumerStale.eStaleLog.get(key);
+				} else if (type.equals("t")) {
+					list = consumerStale.tStaleLog.get(key);
+				}
+				int index=Integer.parseInt(request.getParameter("index"));
+				String result="";
+				int count=0;
+				for (int i=index;i<list.size();i++){
+					count++;
+				result+=list.get(i).lastReadOffset+":"+list.get(i).lastWriteOffset+":"+appName+":"+key+":"+i+":"+type+":"+list.get(i).tid+",";
+				if (count>=100)
+					break;
+					
+				}
+				if(result.isEmpty())
+					out.print("Finish");
+				else{
+			result=result.substring(0,result.length()-1);
+				out.print(result);
+				}
+			}
+		}
+	}
+%>
+

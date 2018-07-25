@@ -1,0 +1,107 @@
+<%@page import="edu.usc.stalemeter.website.PolygraphUISettings"%>
+<%@page import="edu.usc.stalemeter.website.MySQLResponse"%>
+<%@page import="edu.usc.stalemeter.website.MySQL"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%
+	if ((session.getAttribute("userid") == null) || (session.getAttribute("userid") == "")) {
+		out.print("You are not logged in<br/><a href=\"index.jsp\">Please Login</a>");
+	} else {
+		if ((session.getAttribute("appid") == null) || (session.getAttribute("appid") == "")) {
+			response.sendRedirect("mainPage.jsp");
+		} else {
+			int userid = (int) session.getAttribute("userid");
+			int appid = (int) session.getAttribute("appid");
+			String parameters = userid + "," + appid;
+			int tid = (request.getParameter("transID") == null
+					? -1
+					: Integer.parseInt(request.getParameter("transID")));
+			String transName = (request.getParameter("transName") != null
+					? request.getParameter("transName")
+					: "New Transaction");
+			String title = (tid == -1
+					? "Adding a new Transaction"
+					: "Editing transaction \"" + transName + "\"");
+			if (tid == -1) {
+				MySQLResponse i = MySQL.insertTrans(userid, appid, transName, "{\"Name\":\""+transName+"\",\"Elements\":[]}");
+				//System.out.println("i.msg = " + i.msg);
+				tid = Integer.parseInt(i.msg);
+				//System.out.println("tid = " + tid);
+			}
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title><%=title%></title>
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="stylesheet" href="css/menubar.css" type="text/css">
+<script src="js/common.js" type="text/javascript"></script>
+<script src="js/trans.js" type="text/javascript"></script>
+<script src="js/erCommon.js" type="text/javascript"></script>
+<script>
+window.onload = function () {
+	init("click");
+	loadER(false);
+	setTimeout(loadT, 10);
+	
+};
+function loadT(){
+	loadTrans(<%=tid%>, false);
+}
+</script>
+</head>
+<body>
+	<ul>
+		<li><a href="mainPage.jsp">Applications</a></li>
+		<li><a href="app.jsp"><%=session.getAttribute("appName")%></a></li>
+		<li><a class="active" href=""><%=transName%></a></li>
+		<li style="float: right"><a href="logout.jsp">Logout</a></li>
+	</ul>
+	<br />
+	<table class="shadow" style="width: <%=PolygraphUISettings.width %>px; margin: auto;">
+		<tr>
+			<td align="center"><button onclick="loadTrans(<%=tid%>, true)">Load</button></td>
+			<td align="center"><button onclick="saveTrans(<%=tid%>)">Save</button></td>
+			<td align="center" style="width: 250px"><div id="buttonResult"></div></td>
+			<td align="center"><button onclick="importTrans()">Import</button></td>
+			<td align="center"><button onclick="exportTrans('<%=session.getAttribute("appName")%>')">Export</button></td>
+		</tr>
+	</table>
+	<br />
+	<table class="shadow" style="width: <%=PolygraphUISettings.width %>px">
+		<tr>
+			<td style="text-align: center;">Transaction Name <input id="transName" type="text" value="<%=transName%>" /> <!-- onblur="updateTransName(this)" --> <br /></td>
+		</tr>
+	</table>
+	<br />
+	<table class="shadow" style="width: <%=PolygraphUISettings.width %>px">
+		<tr>
+			<td colspan="2" style="text-align: center;">Select participating entity and relationship sets from the ER diagram.</td>
+		</tr>
+		<tr>
+			<td style="vertical-align: top; background-color: #caccd0; width: 394px;">
+				<div style="width: 394px; height: 500px; overflow: scroll;">
+					<table style="width: 100%; margin: auto;">
+						<tr>
+							<th style="background-color: white; box-shadow: 5px 5px 10px gray;">E/R Sets</th>
+						</tr>
+						<tr>
+							<td><br />
+								<div id="er_sets"></div></td>
+						</tr>
+					</table>
+				</div>
+			</td>
+			<td>
+				<div style="width: 500px; height: 500px; overflow: scroll;">
+					<canvas id="myCanvas" width="1000" height="1000" style="border:1px solid #d3d3d3;"></canvas>
+				</div>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>
+<%
+	}
+	}
+%>

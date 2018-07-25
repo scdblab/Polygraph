@@ -1,0 +1,22 @@
+<%@page import="edu.usc.stalemeter.website.PolygraphUISettings"%>
+<%@ page import="java.sql.*"%>
+<%@ page import="edu.usc.stalemeter.*"%>
+<%
+	String appName = (String)session.getAttribute("appName");
+	String topic = "STATS_" + appName;
+	//System.out.println("%%%% topic = " + topic);
+	StatsConsumer consumerStale = (StatsConsumer)session.getAttribute("MR1");//topic+"_consumerStale"
+	StatsConsumer consumerStats = (StatsConsumer)session.getAttribute(topic+"_consumerStats");
+
+	if (consumerStale == null) {
+		consumerStale = new StatsConsumer(topic, topic, 1, PolygraphUISettings.KAFKA_HOST);
+		session.setAttribute("MR1", consumerStale);
+	}
+	if (consumerStats == null) {
+		consumerStats = new StatsConsumer(topic, topic, 0, PolygraphUISettings.KAFKA_HOST);
+		session.setAttribute(topic+"consumerStats", consumerStats);
+	}
+	String result = KafkaScripts.getStatsJSON(consumerStale, consumerStats);
+	out.println(result);
+	out.flush();
+%>

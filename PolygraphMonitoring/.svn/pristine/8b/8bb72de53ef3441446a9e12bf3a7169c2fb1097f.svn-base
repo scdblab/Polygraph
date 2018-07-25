@@ -1,0 +1,22 @@
+<%@page import="edu.usc.stalemeter.website.MySQLResponse.MySQLStatus"%>
+<%@page import="edu.usc.stalemeter.website.MySQLResponse"%>
+<%@page import="edu.usc.stalemeter.website.MySQL"%>
+<%@ page import="java.sql.*"%>
+<%
+	if ((session.getAttribute("userid") == null) || (session.getAttribute("userid") == "")) {
+		out.println("You are not logged in<br/><a href=\"index.jsp\">Please Login</a>");
+	} else {
+		if ((session.getAttribute("appid") == null) || (session.getAttribute("appid") == "")) {
+			response.sendRedirect("mainPage.jsp");
+		} else {
+			int userid = (int) session.getAttribute("userid");
+			int appid = (int) session.getAttribute("appid");
+			//System.out.println("request.getParameter(\"tid\") = " + request.getParameter("tid"));
+			int tid = Integer.parseInt(request.getParameter("tid"));
+			if (tid != -1) {
+				MySQLResponse i = MySQL.loadTrans(userid, appid, tid);
+				out.print(i.msg);
+			}
+		}
+	}
+%>

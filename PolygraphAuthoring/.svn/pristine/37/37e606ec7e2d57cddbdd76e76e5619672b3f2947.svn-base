@@ -1,0 +1,330 @@
+package demo;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+
+import demo.MyThread;
+import edu.usc.polygraph.KafkaScripts;
+import edu.usc.polygraph.website.PolygraphUISettings;
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ *
+ * @author yaz
+ */
+class Point{
+	public long time;
+	public long lostMoney;
+	Point(long t, long lm){
+		time=t;
+		lostMoney=lm;
+	}
+	public Point() {
+		
+	}
+	public String toString(){
+		return time+":"+lostMoney;
+	}
+}
+public class DemoMain {
+	public static final String ER="{\"Entities\":[{\"type\":\"Entity\",\"name\":\"Account\",\"center\":{\"x\":197,\"y\":128},\"properties\":[{\"name\":\"accountID\",\"type\":\"String\",\"pk\":true},{\"name\":\"Balance\",\"type\":\"Double\",\"pk\":false}],\"left\":147,\"top\":103,\"width\":100,\"height\":50,\"fill\":false}],\"Relationships\":[],\"Connectors\":[]}";
+	public static final String WITHDRAW_STR="{\"Name\":\"Withdraw\",\"Elements\":[{\"eid\":0,\"elementType\":\"Entity\",\"sets\":[{\"type\":\"READ&WRITE\",\"pks\":[{\"variable\":\"accountID\",\"pid\":0}],\"properties\":[{\"variable\":\"bal1\",\"type\":\"R\",\"pid\":1},{\"variable\":\"bal2\",\"type\":\"Q\",\"pid\":1}],\"single\":true,\"stop\":\"\"}]}]}";
+	public static final int DEFAULT_NUM_THREADS=3;
+	public static final int STAT_INTERVAL_MILLIS=10000;
+
+    public  KafkaProducer<String, String> kafkaProducer = null;
+	public String id;
+	public FileThread fileThread;
+	public UpdateStats statsThread;
+	public ArrayList<MyThread> accThreads= new ArrayList<MyThread>();
+	public static HashMap<String,DemoMain> demos= new HashMap<String,DemoMain>();
+	public Point chartData[];
+	public static int dataLength=360;
+	public long startTime;
+	public boolean ready;
+	public long startTimeNano;
+	public int numFilledPoints=0;
+    public DemoMain(String id, int threadCount) {
+    	
+    	ready=false;
+		this.id=id;
+		startTime=System.currentTimeMillis();
+		startTimeNano=System.nanoTime();
+		chartData= new Point [dataLength];
+		for (int i=0; i<3;i++){
+			chartData[i]= new Point((i*1000)+(8*60*60*1000), 0);
+		}
+		numFilledPoints=3;
+	}
+    public static boolean updateThreads(String id,int threadCount){
+    	if (!demos.containsKey(id))
+    		return false;
+    	DemoMain demo = demos.get(id);
+    	if (demo.accThreads.size()==threadCount)
+    		return true;
+    	
+    	if (threadCount < demo.accThreads.size()){
+    		
+    		for (int i= demo.accThreads.size()-1; i>=threadCount;i--){
+    			MyThread thread = demo.accThreads.remove(i);
+    			thread.stop=true;
+    			try {
+					thread.join();
+				} catch (InterruptedException e) {
+					
+					e.printStackTrace(System.out);
+				}
+    		}
+    	}
+    	else{
+    		
+    		if (demo.accThreads.size()>1){
+    			System.out.println("Error Expecting Single thread");
+    			System.exit(0);
+    		}
+    		for(int i=demo.accThreads.size(); i<threadCount;i++){
+    			MyThread th= new MyThread(id, i+"", demo.kafkaProducer, demo.accThreads.get(0).tid);
+            	th.start();
+            	demo.accThreads.add(th);
+    		}
+    	}
+ 
+    	return true;
+    	
+    }
+    public static String getChartDataStr(String id, boolean update){
+    	if (!demos.containsKey(id)){
+    		return null;
+    	}
+    	return demos.get(id).getChartDataStr(update);
+    }
+    public static DemoMain getDemo(String id){
+    	return demos.get(id);
+    }
+    
+    public String getChartDataStr(boolean update){
+//    	if (update){
+//    	updateChartData(); 
+//    	}
+    	String result="";
+    	int l=chartData.length;
+    	if (numFilledPoints<chartData.length)
+    		l=numFilledPoints;
+    	for (int i=0; i<l;i++){
+    		if (i== l-1){
+    			result+=chartData[i].time+":"+chartData[i].lostMoney;
+    			}
+    		else{
+    			result+=chartData[i].time+":"+chartData[i].lostMoney+",";
+    		}
+    	}
+    //	System.out.println(result);
+    	return result;
+    }
+    public String getElapsedTimeStr(){
+    	String result="";
+    	long s=(System.currentTimeMillis()-startTime)/1000;
+    	long m= s/60;
+    	long h= m/60;
+    	s=s%60;
+    	m=m%60;
+    	if (h>=1)
+    		result+=h+" "+"Hour(s):";
+    	
+    	if (m>=1 || h>=1)
+    		result+=m+" "+"Minute(s):";
+    	
+    	result+=s+" "+"Second(s)";
+    		
+    	return result;
+    }
+    void updateChartData(){
+    	
+    	if (fileThread==null||chartData==null){
+    	//	System.out.println("No chart update");
+    		return;
+    	}
+    	
+    	if (numFilledPoints>=chartData.length){
+    	for (int i=0;i<chartData.length-1;i++){
+    		chartData[i].lostMoney=chartData[i+1].lostMoney;
+    		chartData[i].time=chartData[i+1].time;
+
+    	}
+    	long st=System.currentTimeMillis();
+//    	if (st<chartData[chartData.length-1].time+10000){
+//    		long t= chartData[chartData.length-1].time+10000-st;
+//    		try {
+//				Thread.sleep(t);
+//				st=System.currentTimeMillis();
+//			} catch (InterruptedException e) {
+//				
+//				e.printStackTrace(System.out);
+//			}
+//    	}
+    		
+    	chartData[chartData.length-1].time=st-startTime+(8*60*60*1000);
+    	chartData[chartData.length-1].lostMoney=fileThread.moneyLost;
+    	}
+    	else{
+    		long st=System.currentTimeMillis();
+    		chartData[numFilledPoints]= new Point();
+    		chartData[numFilledPoints].time=st-startTime+(8*60*60*1000);
+        	chartData[numFilledPoints].lostMoney=fileThread.moneyLost;
+        	numFilledPoints++;
+    	}
+    }
+	public static DemoMain run(String id, int threadCount, long duration){
+        System.out.println("Calling run for "+id);
+        
+        if (demos.containsKey(id)){
+        	System.out.println("Session Already Exist:"+id);
+        	return demos.get(id);
+        }
+        DemoMain newDemo= new DemoMain(id, threadCount);
+        demos.put(id, newDemo);
+		KafkaScripts.killValidator(id);
+        System.out.println("Starting ...");
+
+        
+    	KafkaScripts.restartTopics(id, 1,false);
+        runPolygraph( id);
+        MyThread.initAcc(id);
+        newDemo.kafkaProducer=PolygraphHelper.initKafkaProducer(PolygraphUISettings.KAFKA_HOST);
+        AtomicLong counter= new AtomicLong(0);
+        for (int i=0;i<threadCount;i++){
+        	MyThread th= new MyThread(id, i+"", newDemo.kafkaProducer,counter);
+        	th.start();
+        	newDemo.accThreads.add(th);
+        }
+        
+        String file="/home/mr1/StaleMeter/out/"+id+"_out.txt";
+        newDemo.fileThread=new FileThread(file, 1000);
+        newDemo.fileThread.start();
+        newDemo.statsThread=new UpdateStats(newDemo);
+        new Thread(newDemo.statsThread).start();
+//        
+        try {
+		//	Thread.sleep(600000000);
+		} catch (Exception e) {
+			
+			e.printStackTrace(System.out);
+		}
+      //  close(id);
+        
+        newDemo.ready=true;
+        return newDemo;
+    }
+    public static long getLostMoney(String id){
+    	if (!demos.containsKey(id)){
+    		System.out.println("We have a problem. Topic:"+id+" not exist!!");
+    		return -1;
+    	}
+    	DemoMain demo = demos.get(id);
+    	return demo.fileThread.moneyLost;
+    }
+    public  void closeKafka(){
+    	if (kafkaProducer!=null){
+         kafkaProducer.flush();
+         kafkaProducer.close();  
+    	}
+    }
+public static int close(String id) {
+		DemoMain demo = demos.get(id);
+		demos.remove(id);
+		if (demo==null)
+			return 0;
+		long total=0;
+		int account=demo.accThreads.size();
+		if (demo.accThreads!=null){
+		for (MyThread t:demo.accThreads){
+			try {
+				t.stop=true;
+				t.join();
+			} catch (InterruptedException e) {
+				
+				e.printStackTrace(System.out);
+			}
+			total+=t.count;
+
+			
+		}
+		}
+		demo.closeKafka();
+
+		demo.statsThread.stop=true;
+		demo.fileThread.stop=true;
+		//System.out.println("Total Number of Transactions for "+id+"="+total);
+		KafkaScripts.killValidator(id);
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace(System.out);
+		}
+		KafkaScripts.deleteTopic(id );
+		KafkaScripts.deleteTopic("STATS_" + id );
+		return account;
+		
+	}
+public static void main(String args[]){
+	DemoMain d = run("DEMO_2", 3, 0);
+	long total=0;
+	try {
+		Thread.sleep(1000*60*3);
+	} catch (InterruptedException e1) {
+		e1.printStackTrace();
+	}
+	for (MyThread th:d.accThreads){
+		th.stop=true;
+		try {
+			th.join();
+			total+=th.count;
+		} catch (InterruptedException e) {
+			e.printStackTrace(System.out);
+		}
+		
+	}
+	System.out.println("Total:"+total);
+	d.closeKafka();
+	
+}
+	private static void runPolygraph(String id) {
+		
+		KafkaScripts.launchValidators(id);
+	}
+	public static void readFile(String file, long sleepMillis){
+		
+	}
+    
+}
+
+class UpdateStats implements Runnable {
+	DemoMain demo;
+	public boolean stop=false;
+	public UpdateStats(DemoMain demo) {
+		this.demo=demo;
+		
+	}
+	public void run() {
+		while(!stop){
+			demo.updateChartData();
+			try {
+				Thread.sleep(DemoMain.STAT_INTERVAL_MILLIS);
+			} catch (InterruptedException e) {
+				
+				e.printStackTrace(System.out);
+			}
+		}
+	}
+}

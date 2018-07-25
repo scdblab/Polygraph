@@ -1,0 +1,555 @@
+package edu.usc.stalemeter.website;
+
+import java.sql.*;
+import java.util.ArrayList;
+
+import edu.usc.stalemeter.website.MySQLResponse.MySQLStatus;
+
+public class MySQL {
+
+	public static MySQLResponse addUser(String username, String password) {
+		MySQLResponse response = new MySQLResponse();
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			try {
+				Statement st = con.createStatement();
+				int result = st.executeUpdate(
+						"insert into users(username, password) values ('" + username + "','" + password + "')", Statement.RETURN_GENERATED_KEYS);
+				ResultSet rs = st.getGeneratedKeys();
+				response.status = MySQLStatus.OK;
+				rs.next();
+				response.msg = String.valueOf( rs.getInt(1) );
+			} catch (SQLException e) {
+				response.status = MySQLStatus.ERROR;
+				response.msg = e.getMessage();
+				e.printStackTrace(System.out);
+			}
+			con.close();
+			return response;
+		} catch (SQLException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		}
+		return response;
+	}
+
+	public static MySQLResponse getTrans(int userid, int appid) {
+		MySQLResponse response = new MySQLResponse();
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			Statement st = con.createStatement();
+			ResultSet rs = st.executeQuery("select tid, name from trans where uid='" + userid + "' and aid='" + appid + "'");
+			response.msg = "";
+			String seperator = "";
+			while(rs.next()) {
+				response.msg += seperator + rs.getString("tid") + "," + rs.getString("name");
+				if(seperator.equals(""))
+					seperator = ";";
+			}
+			response.status = MySQLStatus.OK;
+			con.close();
+			return response;
+		} catch (SQLException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		}
+		return response;
+	}
+	
+	public static ArrayList<Integer> getAppTrans(int userid, int appid) {
+		ArrayList<Integer> ids = new ArrayList<Integer>(); 
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			Statement st = con.createStatement();
+//			System.out.println("cmd: select tid from trans where uid='" + userid + "' and aid='" + appid + "'");
+			ResultSet rs = st.executeQuery("select tid from trans where uid='" + userid + "' and aid='" + appid + "'");
+			
+			while(rs.next()){
+				ids.add(rs.getInt("tid"));
+			}
+			con.close();
+			return ids;
+		} catch (SQLException e) {
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace(System.out);
+		}
+		return ids;
+	}
+
+	public static MySQLResponse getUserID(String username, String password) {
+		MySQLResponse response = new MySQLResponse();
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			try {
+				Statement st = con.createStatement();
+				ResultSet rs = st.executeQuery(
+						"select id from users where username='" + username + "' and password='" + password + "'");
+				if (rs.next()) {
+					response.msg = String.valueOf(rs.getInt("id"));
+					response.status = MySQLStatus.OK;
+				} else {
+					response.status = MySQLStatus.ERROR;
+					response.msg = "The Username and Password don't match.";
+				}
+			} catch (SQLException e) {
+				response.status = MySQLStatus.ERROR;
+				response.msg = e.getMessage();
+				e.printStackTrace(System.out);
+			}
+			con.close();
+			return response;
+		} catch (SQLException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		}
+		return response;
+	}
+
+	public static MySQLResponse addApp(int userid, String appName) {
+		MySQLResponse response = new MySQLResponse();
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			try {
+				Statement st = con.createStatement();
+				int result = st
+						.executeUpdate("insert into apps(uid, name) values ('" + userid + "','" + appName + "')");
+				response.status = MySQLStatus.OK;
+			} catch (SQLException e) {
+				response.status = MySQLStatus.ERROR;
+				response.msg = e.getMessage();
+				e.printStackTrace(System.out);
+			}
+			con.close();
+			return response;
+		} catch (SQLException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		}
+		return response;
+	}
+
+	public static MySQLResponse delApp(int userid, int appid) {
+		MySQLResponse response = new MySQLResponse();
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			try {
+				Statement st = con.createStatement();
+				int result = st.executeUpdate("delete from apps where aid='" + appid + "' and uid='" + userid + "'");
+				response.status = MySQLStatus.OK;
+			} catch (SQLException e) {
+				response.status = MySQLStatus.ERROR;
+				response.msg = e.getMessage();
+				e.printStackTrace(System.out);
+			}
+			con.close();
+			return response;
+		} catch (SQLException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		}
+		return response;
+	}
+
+	public static ResultSet getApps(int userID) {
+		try {
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			Statement st = con.createStatement();
+			return st.executeQuery("select aid, name from apps where uid='" + userID + "'");
+		} catch (SQLException e) {
+			e.printStackTrace(System.out);
+		}
+		return null;
+	}
+
+//	public static MySQLResponse getCode(int userid, int appid) {
+//		MySQLResponse response = new MySQLResponse();
+//		try {
+//			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+//			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+//					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+//			Statement st = con.createStatement();
+//			ResultSet rs = st.executeQuery("select code from apps where uid='" + userid + "' and aid='" + appid + "'");
+//			if (rs.next()) {
+//				response.msg = String.valueOf(rs.getString("code"));
+//				response.status = MySQLStatus.OK;
+//			} else {
+//				response.msg = null;
+//				response.status = MySQLStatus.ERROR;
+//			}
+//			con.close();
+//			return response;
+//		} catch (SQLException e) {
+//			response.status = MySQLStatus.ERROR;
+//			response.msg = e.getMessage();
+//			e.printStackTrace(System.out);
+//		} catch (InstantiationException e) {
+//			response.status = MySQLStatus.ERROR;
+//			response.msg = e.getMessage();
+//			e.printStackTrace(System.out);
+//		} catch (IllegalAccessException e) {
+//			response.status = MySQLStatus.ERROR;
+//			response.msg = e.getMessage();
+//			e.printStackTrace(System.out);
+//		} catch (ClassNotFoundException e) {
+//			response.status = MySQLStatus.ERROR;
+//			response.msg = e.getMessage();
+//			e.printStackTrace(System.out);
+//		}
+//		return response;
+//
+//	}
+
+	public static MySQLResponse updateER(int uid, int aid, String json) {
+		MySQLResponse response = new MySQLResponse();
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			try {
+				Statement st = con.createStatement();
+				int result = st.executeUpdate("update apps set er='"+json+"' where uid='" + uid + "' and aid='" + aid + "'");
+				response.status = MySQLStatus.OK;
+				response.msg = "Saved";
+			} catch (SQLException e) {
+				response.status = MySQLStatus.ERROR;
+				response.msg = e.getMessage();
+				e.printStackTrace(System.out);
+			}
+			con.close();
+			return response;
+		} catch (SQLException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		}
+		return response;
+	}
+
+	public static MySQLResponse loadER(int uid, int aid) {
+		MySQLResponse response = new MySQLResponse();
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			Statement st = con.createStatement();
+			ResultSet rs = st.executeQuery("select er from apps where uid='" + uid + "' and aid='" + aid + "'");
+			if (rs.next()) {
+				response.msg = rs.getString("er");
+				response.status = MySQLStatus.OK;
+			} else {
+				response.msg = null;
+				response.status = MySQLStatus.ERROR;
+			}
+			con.close();
+			return response;
+		} catch (SQLException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		}
+		return response;
+
+	}
+	
+	public static MySQLResponse updateTrans(int uid, int aid, int tid, String name, String json) {
+		MySQLResponse response = new MySQLResponse();
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			try {
+				Statement st = con.createStatement();
+				int result = st.executeUpdate("update trans set name='"+name+"', code='"+json+"' where uid='" + uid + "' and aid='" + aid + "' and tid='" + tid + "'");
+				response.status = MySQLStatus.OK;
+				response.msg = "Saved";
+			} catch (SQLException e) {
+				response.status = MySQLStatus.ERROR;
+				response.msg = e.getMessage();
+				e.printStackTrace(System.out);
+			}
+			con.close();
+			return response;
+		} catch (SQLException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		}
+		return response;
+	}
+	
+	public static MySQLResponse loadTrans(int uid, int aid, int tid) {
+		MySQLResponse response = new MySQLResponse();
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			Statement st = con.createStatement();
+			ResultSet rs = st.executeQuery("select code from trans where uid='" + uid + "' and aid='" + aid + "' and tid='" + tid + "'");
+			if (rs.next()) {
+				response.msg = rs.getString("code");
+				response.status = MySQLStatus.OK;
+			} else {
+				response.msg = null;
+				response.status = MySQLStatus.ERROR;
+			}
+			con.close();
+			return response;
+		} catch (SQLException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		}
+		return response;
+	}
+	
+	public static MySQLResponse insertTrans(int uid, int aid, String name, String json) {
+		MySQLResponse response = new MySQLResponse();
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			try {
+				Statement st = con.createStatement();
+				if(name == ""){
+					name = "New Transactoion";
+				}
+				int result = st.executeUpdate("insert into trans(uid, aid, name, code) values ('" + uid + "', '" + aid + "', '" + name + "', '" + json + "')", Statement.RETURN_GENERATED_KEYS);
+				ResultSet rs = st.getGeneratedKeys();
+				response.status = MySQLStatus.OK;
+				rs.next();
+				response.msg = String.valueOf( rs.getInt(1) );
+			} catch (SQLException e) {
+				response.status = MySQLStatus.ERROR;
+				response.msg = e.getMessage();
+				e.printStackTrace(System.out);
+			}
+			con.close();
+			return response;
+		} catch (SQLException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		}
+		return response;
+	}
+	
+	public static MySQLResponse updateAppName(int uid, int aid, String name) {
+		MySQLResponse response = new MySQLResponse();
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			try {
+				Statement st = con.createStatement();
+				int result = st.executeUpdate("update apps set name='"+name+"' where uid='" + uid + "' and aid='" + aid + "'");
+				response.status = MySQLStatus.OK;
+				response.msg = "Saved";
+			} catch (SQLException e) {
+				response.status = MySQLStatus.ERROR;
+				response.msg = e.getMessage();
+				e.printStackTrace(System.out);
+			}
+			con.close();
+			return response;
+		} catch (SQLException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		}
+		return response;
+	}
+	
+	public static MySQLResponse delTrans(int userid, int appid, int tid) {
+		MySQLResponse response = new MySQLResponse();
+		try {
+			Class.forName(PolygraphUISettings.MySQLDriver).newInstance();
+			Connection con = DriverManager.getConnection(PolygraphUISettings.connectionString,
+					PolygraphUISettings.dbUsername, PolygraphUISettings.dbPassword);
+			try {
+				Statement st = con.createStatement();
+//				System.out.println("delete from trans where aid='" + appid + "' and uid='" + userid + "' and tid='" + tid + "'");
+				int result = st.executeUpdate("delete from trans where aid='" + appid + "' and uid='" + userid + "' and tid='" + tid + "'");
+				response.status = MySQLStatus.OK;
+			} catch (SQLException e) {
+				response.status = MySQLStatus.ERROR;
+				response.msg = e.getMessage();
+				e.printStackTrace(System.out);
+			}
+			con.close();
+			return response;
+		} catch (SQLException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (InstantiationException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (IllegalAccessException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		} catch (ClassNotFoundException e) {
+			response.status = MySQLStatus.ERROR;
+			response.msg = e.getMessage();
+			e.printStackTrace(System.out);
+		}
+		return response;
+	}
+
+}

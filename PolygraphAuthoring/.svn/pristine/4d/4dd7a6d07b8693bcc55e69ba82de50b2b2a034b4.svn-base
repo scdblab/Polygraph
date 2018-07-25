@@ -1,0 +1,236 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package demo;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
+public class MyThread extends Thread{
+	private Connection conn;
+    public KafkaProducer<String, String> kafkaProducer = null;
+    public AtomicLong tid;
+	public  boolean stop=false;
+	public static long INIT_BAL=100000000;
+	
+	public static final String URLS = "jdbc:mysql://10.0.0.240:3306/demo";
+	public static final String user ="cosar";
+	public static final String passwd = "gocosar";
+	public static final String driver ="com.mysql.jdbc.Driver";
+	public  String accountID="x";
+	public static final int AMOUNT=100;
+	public long count=0;
+	String threadid=null;
+	private PreparedStatement read;
+	private PreparedStatement update;
+	public static void deleteFromDB(String id){
+		try {
+			Class.forName(driver).newInstance();
+
+			Connection myconn = DriverManager.getConnection(URLS, user, passwd);
+			myconn.setAutoCommit(false);
+			String delete= "delete from accounts where id= ?";
+			
+				PreparedStatement preparedStatement = myconn.prepareStatement(delete);
+				preparedStatement.setString(1,id );
+				preparedStatement.executeUpdate();
+				myconn.commit();
+				preparedStatement.close();
+				myconn.close();
+			//	System.exit(0);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace(System.out);
+		}
+		
+
+		
+	}
+	public  static void initAcc(String accID){
+		
+		try {
+			Class.forName(driver).newInstance();
+
+			Connection myconn = DriverManager.getConnection(URLS, user, passwd);
+			myconn.setAutoCommit(false);
+			String delete= "delete from accounts where id= ?";
+			
+				PreparedStatement preparedStatement = myconn.prepareStatement(delete);
+				preparedStatement.setString(1,accID );
+				preparedStatement.executeUpdate();
+				String insert= "insert into accounts values(?,?)";
+				preparedStatement = myconn.prepareStatement(insert);
+				preparedStatement.setString(1,accID );
+				preparedStatement.setLong(2,INIT_BAL );
+				preparedStatement.executeUpdate();
+				myconn.commit();
+				preparedStatement.close();
+				myconn.close();
+			//	System.exit(0);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace(System.out);
+		}
+		
+	}
+	MyThread(String accID,String threadid,KafkaProducer<String, String> kafkaProducer, AtomicLong c ){
+		try {
+			tid=c;
+			this.kafkaProducer=kafkaProducer;
+			accountID=accID;
+			this.threadid=threadid;
+			Class.forName(driver).newInstance();
+
+			conn = DriverManager.getConnection(URLS, user, passwd);
+			conn.setAutoCommit(false);
+			String updateQ= "update accounts set balance= ? where id= ?";
+		
+				update=conn.prepareStatement(updateQ);
+				String query="select * from accounts where id= ?";
+				
+					read=conn.prepareStatement(query);
+		} catch (Exception e) {
+			
+			e.printStackTrace(System.out);
+		}
+		
+		
+	}
+	
+	public void run(){
+		long seq=0;
+		while (! stop){
+			seq++;
+	long startTime=System.nanoTime();
+	
+	long bal1= performQ();
+	try {
+		conn.commit();
+	} catch (SQLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace(System.out);
+	}
+	
+	
+	long bal2=bal1-AMOUNT;
+	try{
+		update.clearParameters();
+		update.setString(2,accountID );
+		update.setLong(1, bal2);
+		update.executeUpdate();
+		conn.commit();
+		
+		ArrayList<Entity> transEntities= new ArrayList<Entity>();
+		String Account_key_0 = accountID;
+		Property[] props_Account_1 = new Property[2];
+		props_Account_1[0] = new Property("Balance", String.valueOf(bal1), 'R');
+		props_Account_1[1] = new Property("Balance", String.valueOf(AMOUNT*-1), 'I');
+		Entity e_Account_2 = new Entity(Account_key_0, "Account", props_Account_1);
+		transEntities.add(e_Account_2);
+
+		long endTime=System.nanoTime();
+		long tansId=tid.incrementAndGet();
+		String logRecord = PolygraphHelper.getLogRecordString('Z', "Withdraw", String.valueOf(tansId), startTime, endTime, transEntities);
+		int[] keys_4 = new int[1];
+		keys_4[0] = PolygraphHelper.convertStringToInt(accountID);
+		int key_3 = PolygraphHelper.getPartitionKey(keys_4);
+		int partitionEnd = (key_3 % PolygraphHelper.numPartitions_Demo_1) + PolygraphHelper.numPartitions_Demo_1;
+		kafkaProducer.send(new ProducerRecord<String, String>(accountID,partitionEnd, String.valueOf(tansId), logRecord));
+		//********************************************************************/
+	} catch (SQLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace(System.out);
+	}
+	
+	count++;
+	if (count%10000==0)
+	      System.out.println("ID "+threadid+": performed "+count);
+
+		}
+		
+		try {
+			conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace(System.out);
+		}
+	}
+
+	private long performQ() {
+		long balance1=0;
+		try{
+			read.clearParameters();
+			read.setString(1,accountID );
+			ResultSet rs = read.executeQuery();
+			if (rs.next()) {
+				balance1=rs.getLong(2);
+			}
+			else{
+				System.out.println("Error: No record is returned");
+			}
+			rs.close();
+		
+		
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace(System.out);
+		}
+		return balance1;
+	}
+		public static void main(String args[]){
+			int threadCount=3;
+			long duration=0;
+			//runAccountThreads("Y",threadCount,duration);
+		}
+		public  void runAccountThreads(String id,int threadCount, long duration) {
+			System.out.println("Starting Account Threads with topic:"+id);
+		
+			//System.exit(0);
+			//PolygraphHelper.initKafkaProducer();
+			
+			
+			ArrayList<MyThread> threads= new ArrayList<MyThread>();
+			for(int i=0;i<threadCount;i++){
+			//	MyThread t1=new MyThread(i+"");
+			//	threads.add(t1);
+			//	t1.start();
+			}
+		//	MyThread.threads=threads;
+			try {
+//				Thread.sleep(duration);
+//				if (duration==0){
+//					MyThread.stop=false;
+//				}
+//				else{
+//				MyThread.stop=true;
+//				}
+//				for (MyThread t:threads){
+//					t.join();
+//					
+//				}
+//				PolygraphHelper.closeKafka();
+//				long total=0;
+//				for (MyThread t:threads){
+//					total+=t.count;
+//				}
+//				System.out.println("Total Number of Transactions="+total);
+			} catch (Exception e) {
+				
+				e.printStackTrace(System.out);
+			}
+			
+		
+			
+			
+		}
+}

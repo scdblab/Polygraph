@@ -1,0 +1,11 @@
+-id 0 -numvalidators 1 -app DD -init true -kafka true -printfreq 1000 -globalschedule false -er /home/yaz/Validation/props -kafkalogdir /home/yaz/kafkatests -filelogdir /home/yaz/bglogs/BG-10K-100fpm-100Threads-1Min-AccptFrd-incFriend
+
+-ea
+-Xmx15G
+-Dlog4j.configuration=file:/home/yaz/StaleMeter/StaleMeter/log4j.properties
+
+
+/home/yaz/bglogs/BG-10K-100fpm-100Threads-30Min-part-noStale 1 DD
+
+ ./runValidExp.sh /home/yaz/bglogs/BG-10K-100fpm-100Threads-1Min-Nostale-partitioned/ 1 DD test3
+

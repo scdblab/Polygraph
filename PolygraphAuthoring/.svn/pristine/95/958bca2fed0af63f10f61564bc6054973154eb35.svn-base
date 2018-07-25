@@ -1,0 +1,23 @@
+<%@page import="edu.usc.polygraph.website.PolygraphUISettings"%>
+<%@ page import="java.sql.*"%>
+<%@ page import="edu.usc.polygraph.*"%>
+<%
+	if ((session.getAttribute("appNameM") == null) || ((String)session.getAttribute("appNameM") == "")) {
+		out.println("ERROR:Name missing.");
+		out.flush();
+	} else {
+		String appName = (String) session.getAttribute("appNameM");
+		String topic = "STATS_" + appName;
+
+		StatsConsumer consumerStale = (StatsConsumer) session.getAttribute(topic + "_consumerStale");
+		StatsConsumer consumerStats = (StatsConsumer) session.getAttribute(topic + "_consumerStats");
+		if ((consumerStale == null) || (consumerStats == null)) {
+			out.println("ERROR:Consumers missing. Please visit Demo main page");
+			out.flush();
+		} else {
+			String result = KafkaScripts.getStatsJSON(consumerStale, consumerStats);
+			out.println(result);
+			out.flush();
+		}
+	}
+%>

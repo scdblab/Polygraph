@@ -1,0 +1,110 @@
+<%-- 
+    Document   : index
+    Created on : Aug 22, 2017, 2:06:23 PM
+    Author     : yaz
+--%>
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+                  <link rel="stylesheet" href="css/style.css" type="text/css">
+                         <link rel="stylesheet" href="css/style2.css" type="text/css">
+       
+       <script type="text/javascript" src="javascript.js"></script>
+        
+  		<script src="moment.js"></script>
+		<script src="Chart.js"></script>
+		<script src="utils.js"></script>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+         
+        <title>Demo Description</title>
+		
+    <style type="text/css">
+  
+    </style>
+  
+ 
+    </head>
+    <body id="body" >
+   
+        
+   
+        <table class="menut" style="width:100%"><tr style="background-color:#134F5C; height: 50px;"><td style="width: 190px" ><img style="width:150px; height:50px" src="img/dblab.png" /></td>
+                <td style="align-content: center; color: white; font-size: x-large" align="center"> <strong>POLYGRAPH</strong><br/> <label style="font-size: large">(Demonstration Description)</label></td>
+            </tr>
+            <tr ><td style="background-color: #134F5C; vertical-align: top;height: 720px;">
+                    <table class="menut" >
+                        <tr>
+                            <td style="width: 190px; height: 103px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style="margin-left: 0px;padding-left: 0px" >Demo</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoSettings.jsp" >Settings</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoDesc.jsp" >Description</a></li> 
+
+                                            
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        <tr>
+                            <td style="width: 190px; height: 145px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style=" pointer-events: none;cursor: default;" >Polygraph</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="mont.jsp" >Monitoring</a></li> 
+                                             <li><a class="menu" style="margin-left: 35px;" href="Overview.jsp" >Overview</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="Papers.jsp" >Papers</a></li> 
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                        <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" href="about.jsp" >About us</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                         <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" target="_blank"  href="http://dblab.usc.edu" >http://dblab.usc.edu</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                         
+                        
+                        
+                    </table>
+                    
+                 <!-- > Body of Page<-->
+                <td  style="vertical-align:top; padding-top: 20px; padding-left:50px " align="left">
+              <div>
+             <p> This demo shows Polygraph in action detecting anomalies and quantifying the amount of money lost for an application withdrawing money from one account. 
+                 The application consists of a configurable number of threads issuing money withdrawal transactions with a fixed amount of $100.</p>  
+               
+				  <p>	Anomalies may occur for several reasons. One scenario is that Money Withdrawal is <b> <u>incorrectly</u></b> implemented as two transactions. The first performs a balance inquiry 
+					and the second modifies the balance amount after deducting $100 from the inquired amount. 
+					Due to the incorrect implementation of Money Withdrawal as two transactions, anomalies occur causing money lost . 
+					Consider the following example of Alice and Bob both withdrawing $100 from their account with an initial balance of $500. 
+					If Money Withdrawal is implemented as two transactions, it may be the case that each one of them withdraws $100 and modifies the account to $400. In such scenario, $100 has been lost since they both withdraw $200 collectively 
+					while leaving the account at a balance of $400 instead of $300. </p>
+					
+					<img style="width:200; height:200" src="img/MWT.png" />
+					<p> This demo provides two configurations: running the application that issues Money Withdrawal transactions as either single or multi-threaded. Running the application as multi-threaded, produce anomalies that result in lost money which are detected by Polygraph. On the other hand, running the application with a single thread produce no anomalies.
+					 </p>  
+
+              
+              </div>  
+                
+               </td>
+            
+            </tr>
+            
+                
+        </table>
+        
+          
+
+
+    </body>
+</html>

@@ -1,0 +1,25 @@
+<%@page import="java.util.ArrayList"%>
+<%@page import="edu.usc.stalemeter.website.MySQLResponse.MySQLStatus"%>
+<%@page import="edu.usc.stalemeter.website.MySQLResponse"%>
+<%@page import="edu.usc.stalemeter.website.MySQL"%>
+<%@ page import="java.sql.*"%>
+<%
+	if ((session.getAttribute("userid") == null) || (session.getAttribute("userid") == "")) {
+		out.print("You are not logged in<br/><a href=\"index.jsp\">Please Login</a>");
+	} else {
+		int userid = (int) session.getAttribute("userid");
+		int appid = Integer.parseInt(request.getParameter("appid"));
+		ArrayList<Integer> ids = MySQL.getAppTrans(userid, appid);
+		for(int i = 0; i < ids.size(); i++){
+			MySQL.delTrans(userid, appid, ids.get(i));
+		}
+		MySQLResponse i = MySQL.delApp(userid, appid);
+		if (i.status == MySQLStatus.OK) {
+			response.sendRedirect("mainPage.jsp");
+		} else if (i.status == MySQLStatus.ERROR) {
+			request.setAttribute("info", "error");
+			request.setAttribute("errorMSG", i.msg);
+			request.getRequestDispatcher("mainPage.jsp").forward(request, response);
+		}
+	}
+%>

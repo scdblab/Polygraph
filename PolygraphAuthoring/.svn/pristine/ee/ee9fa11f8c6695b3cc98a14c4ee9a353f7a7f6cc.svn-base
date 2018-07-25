@@ -1,0 +1,101 @@
+<%-- 
+    Document   : index
+    Created on : Aug 22, 2017, 2:06:23 PM
+    Author     : yaz
+--%>
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+    
+           <link rel="stylesheet" href="css/style.css" type="text/css">
+                         <link rel="stylesheet" href="css/style2.css" type="text/css">
+       
+       <script type="text/javascript" src="javascript.js"></script>
+        
+  		<script src="moment.js"></script>
+		<script src="Chart.js"></script>
+		<script src="utils.js"></script>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+         
+        <title>Papers</title>
+		
+    <style type="text/css">
+    
+    </style>
+  
+ 
+    </head>
+   <body id="mybody" class="myBody" >
+   
+        <table class="menut" style="width:100%"><tr style="background-color:#134F5C; height: 50px;"><td style="width: 190px" ><img style="width:150px; height:50px" src="img/dblab.png" /></td>
+                <td style="align-content: center; color: white; font-size: x-large" align="center"> <strong>POLYGRAPH</strong><br/> <label style="font-size: large">(Papers)</label></td>
+            </tr>
+            <tr ><td style="background-color: #134F5C; vertical-align: top;height: 720px;">
+                    <table class="menut" >
+                        <tr>
+                            <td style="width: 190px; height: 103px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style="margin-left: 0px;padding-left: 0px" >Demo</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoSettings.jsp" >Settings</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoDesc.jsp" >Description</a></li> 
+
+                                            
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        <tr>
+                            <td style="width: 190px; height: 145px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style=" pointer-events: none;cursor: default;" >Polygraph</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="mont.jsp" >Monitoring</a></li> 
+                                             <li><a class="menu" style="margin-left: 35px;" href="Overview.jsp" >Overview</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="Papers.jsp" >Papers</a></li> 
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                        <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" href="about.jsp" >About us</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                         <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" target="_blank"  href="http://dblab.usc.edu" >http://dblab.usc.edu</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                         
+                        
+                        
+                    </table>
+                    
+                 <!-- > Body of Page<-->
+                <td  style="vertical-align:top; padding-top: 20px; padding-left:50px " align="left">
+           
+             	
+             	
+             	<ul>
+             	<li>Yazeed Alabdulkarim, Marwan Almaymoni, Shahram Ghandeharizadeh <br/> <strong>Polygraph</strong>
+             	
+             	<br/> <a target="_blank" href="http://dblab.usc.edu/Users/papers/PolygraphMay2017.pdf"> USC DBLAB Tech Report 2017-02</a>
+             	</li>
+             	
+             	</ul>                
+               </td>
+            
+            </tr>
+            
+                
+        </table>
+        
+          
+
+
+    </body>
+</html>

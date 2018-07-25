@@ -1,0 +1,155 @@
+<%-- 
+    Document   : index
+    Created on : Aug 22, 2017, 2:06:23 PM
+    Author     : yaz
+--%>
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+    
+           <link rel="stylesheet" href="css/style.css" type="text/css">
+                         <link rel="stylesheet" href="css/style2.css" type="text/css">
+       
+       <script type="text/javascript" src="javascript.js"></script>
+        
+  		<script src="moment.js"></script>
+		<script src="Chart.js"></script>
+		<script src="utils.js"></script>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+         
+        <title>About us</title>
+		
+    <style type="text/css">
+    #container {
+    padding-left:5px;
+    height: 30px;
+    line-height: 30px;
+   display:inline;
+ 
+   
+}
+
+#container img {
+    vertical-align: middle;
+}
+    </style>
+  
+ 
+    </head>
+   <body id="mybody" class="myBody" >
+   
+        <table class="menut" style="width:100%"><tr style="background-color:#134F5C; height: 50px;"><td style="width: 190px" ><img style="width:150px; height:50px" src="img/dblab.png" /></td>
+                <td style="align-content: center; color: white; font-size: x-large" align="center"> <strong>POLYGRAPH</strong><br/> <label style="font-size: large">(About us)</label></td>
+            </tr>
+            <tr ><td style="background-color: #134F5C; vertical-align: top;height: 720px;">
+                    <table class="menut" >
+                        <tr>
+                            <td style="width: 190px; height: 103px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style="margin-left: 0px;padding-left: 0px" >Demo</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoSettings.jsp" >Settings</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoDesc.jsp" >Description</a></li> 
+
+                                            
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        <tr>
+                            <td style="width: 190px; height: 145px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style=" pointer-events: none;cursor: default;" >Polygraph</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="mont.jsp" >Monitoring</a></li> 
+                                             <li><a class="menu" style="margin-left: 35px;" href="Overview.jsp" >Overview</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="Papers.jsp" >Papers</a></li> 
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                        <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" href="about.jsp" >About us</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                         <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" target="_blank"  href="http://dblab.usc.edu" >http://dblab.usc.edu</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                         
+                        
+                        
+                    </table>
+                    
+                 <!-- > Body of Page<-->
+                <td  style="vertical-align:top; padding-top: 50px; padding-left:50px " align="left">
+             	
+             	  	<table   class="menut">
+             	<tr>
+				<td rowspan="2"><img style="width:150px; height:150px" src="img/yaz.JPG" />
+				</td>
+				<td style="height: 10px; vertical-align: center; padding-left: 15px;"> <strong> Yazeed Alabdulkarim</strong> 
+				 <div  id="container" ><a href="mailto:yalabdul@usc.edu" title="yalabdul@usc.edu" data-external="true" data-email="yalabdul" rel="nofollow">
+				 <img  style="padding-top:0px;width: 30px; height: 30px" src="img/e5.png"></a></div></td>
+			
+             	</tr>
+             	<tr> <td>
+             	
+             	ABOUT
+             	
+             	 <td></tr>
+             	 
+             	 <tr >
+				<td rowspan="2" style="padding-top: 70px"><img style="width:150px; height:150px" src="img/mr1.jpg" />
+				</td>
+				<td style="height: 20px; vertical-align: center;padding-top: 60px; padding-left: 15px;"> <strong> Marwan Almaymoni</strong> 
+				<div  id="container" ><a href="mailto:almaymon@usc.edu" title="almaymon@usc.edu" data-external="true" data-email="almaymon" rel="nofollow">
+				 <img  style="padding-top:0px;width: 30px; height: 30px" src="img/e5.png"></a></div></td>
+			
+             	</tr>
+             	<tr> <td>
+             	
+             	ABOUT
+             	
+             	 <td></tr>
+             	 
+             	 
+             	 <tr>
+				<td rowspan="2" style="padding-top: 70px"><img style="width:150px; height:150px" src="img/Shahram.jpg" />
+				</td>
+				<td style="height: 20px; vertical-align: center;padding-top: 60px; padding-left: 15px;"> <strong> Shahram Ghandeharizadeh</strong> 
+			<div  id="container" ><a href="mailto:shahram@usc.edu" title="shahram@usc.edu" data-external="true" data-email="shahram" rel="nofollow">
+				 <img  style="padding-top:0px;width: 30px; height: 30px" src="img/e5.png"></a></div></td>
+			
+             	</tr>
+             	<tr> <td>
+             	
+             	ABOUT
+             	
+             	 <td></tr>
+             	
+             	
+             	
+             	</table>
+             	
+             	
+             	
+             	
+                          
+               </td>
+            
+            </tr>
+            
+                
+        </table>
+        
+          
+
+
+    </body>
+</html>

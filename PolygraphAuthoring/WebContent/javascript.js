@@ -1,0 +1,690 @@
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+// DOM element where the Timeline will be attached
+var container = document.getElementById('visualization');
+timeFormat = 'HH:mm:s';
+// Create a DataSet (allows two way data-binding)
+items = new vis.DataSet();
+// Configuration for the Timeline
+var options = {
+		 
+	dataAxis:{ left:{
+		title:{text:''}, range:{min:0}, 
+		format:function (value) {
+			  return '$'+numberWithCommas(value);
+		}
+	}
+		
+	},
+	height : "450px",
+	width : "700px",
+
+	zoomMin:15000,
+	//showMinorLabels:false,
+	showMajorLabels:false,
+//	zoomMax:1000 * 2,
+	//horizontalScroll:true,
+	//zoomable:false,
+	
+
+	format:{
+		  minorLabels: {
+			    millisecond:'HH:mm:ss',
+			    second:     'HH:mm:ss',
+			    minute:     'HH:mm:ss',
+			    hour:       'HH:mm:ss',
+			    weekday:    'HH:mm:ss',
+			    day:        'HH:mm:ss',
+			    //week:       '',
+			    month:      'HH:mm:ss',
+			    year:       'HH:mm:ss'
+			  },
+			  majorLabels: {
+			    millisecond:'HH:mm:ss',
+			    second:     'HH:mm:ss',
+			    minute:     'HH:mm:ss',
+			    hour:       'HH:mm:ss',
+			    weekday:    'HH:mm:ss',
+			    day:        'HH:mm:ss',
+			   // week:       'MMMM YYYY',
+			    month:      'HH:mm:ss',
+			    year:       'HH:mm:ss'
+			  }
+			}
+};
+
+
+// Create a Timeline
+var timeline;
+
+var groupData = {
+		style:'stroke:#3989a6;fill:#3989a6;',
+        id: 0,
+        content: "Group Name",
+        options: {
+            drawPoints: {
+                styles: 'stroke:#3989a6;fill:#3989a6;' ,// square, circle
+                style:'square',
+            }
+        }
+    };
+
+    var groups = new vis.DataSet();
+    
+function f1() {
+      alert("Hello! I am an alert box!!"+sId );
+     // document.body.style.background="black";
+    
+}
+
+function buildChart(chartData){
+	groups.add(groupData);
+	container = document.getElementById('visualization');
+	var res = chartData.split(",");
+	for (var i=0; i<res.length;i++){
+		//{x: '2014-06-11', y: 10},
+		var tokens=res[i].split(':');
+		var time=moment(tokens[0],"x");
+		//var item="{x:'"+time+"', y:"+tokens[1]+"}";
+		
+		items.add({x:time,y:tokens[1], group:0});
+	}
+	timeline = new vis.Graph2d(container, items, groups,options);
+	
+
+}
+function showQ(q){
+	var e=document.getElementById(q);
+	if (e.style.display=='none'){
+	e.style.display='block';
+	setTimeout(function (){
+		e.style.display='none';
+	}, 3000);
+	}
+	else
+		e.style.display='none';
+
+}
+function loadSettings(){
+	if (singleThread=="true"){
+		document.getElementById("s").checked=true;
+	}
+	else{
+		document.getElementById("m").checked=true;
+	}
+}
+
+function updateChart(chartData){
+	items.clear();
+	var res = chartData.split(",");
+	for (var i=0; i<res.length;i++){
+		//{x: '2014-06-11', y: 10},
+		var tokens=res[i].split(':');
+		var time=moment(tokens[0],"x");
+		//var item="{x:'"+time+"', y:"+tokens[1]+"}";
+		
+		items.add({x:time,y:tokens[1],group:0});
+	}
+	timeline.fit();
+
+}
+
+function numberWithCommas(x) {
+	var n= parseFloat(x);
+	
+	if (n===0){
+		return n;
+	}
+	if (n<1){
+		return n.toFixed(1);
+	}
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+function updateStats(b) {
+	//alert("calling update");
+		
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+		if (xhttp.readyState == 4 && xhttp.status == 200) {
+			//var log = document.getElementById("debug");
+			var result = xhttp.responseText.trim();
+			if (result==null){
+				alert("result==nulll");
+			}
+			else if (result.charAt(0)=='#'){
+				//log.innerHTML = xhttp.responseText;
+				alert(result);
+			}
+			else{
+			//	var d=document.getElementById("debug");
+				//d.innerHTML="Result="+result;
+				if (b==true){
+				var cd=result.split(";");
+//				alert("update:"+cd[0]);
+
+				updateChart(cd[0]);
+				//alert(cd[1]+","+ cd[2]);
+				var lm=document.getElementById("lm");
+				
+				
+				var prev= lm.innerHTML.replace(/,/g,'');
+				prev=prev.replace('$','');
+				prev=prev.split('(')[0];
+				var prevInt=parseInt(prev);
+				var nextInt=parseInt(cd[1]);
+				var resInt= parseFloat(((nextInt-prevInt)/prevInt)*100).toFixed(2);
+				if (resInt>=1){
+					resInt=parseInt(resInt);
+				}
+				if (prevInt==0){
+					lm.innerHTML="$"+numberWithCommas(cd[1]);
+
+				}
+				else{
+				lm.innerHTML="$"+numberWithCommas(cd[1])+" ("+numberWithCommas(resInt)+"%)";
+				}
+				if (nextInt!=0 && resInt!=0){
+				lm.style.backgroundColor='rgb(255,0,0)';
+				changeBColor("lm");
+				}
+				 an=document.getElementById("anomalies");
+				 prev= an.innerHTML.replace(/,/g,'');
+				 prev=prev.split('(')[0];
+				 prevInt=parseInt(prev);
+				 nextInt=parseInt(cd[2]);
+				 resInt= parseFloat(((nextInt-prevInt)/prevInt)*100).toFixed(2);
+				 if (resInt>=1){
+						resInt=parseInt(resInt);
+					}
+					if (prevInt==0){
+						an.innerHTML=numberWithCommas(cd[2]);
+						
+					}
+					else{
+						an.innerHTML=numberWithCommas(cd[2])+" ("+numberWithCommas(resInt)+"%)";
+
+					}
+					if (nextInt!=0 && resInt!=0){
+					an.style.backgroundColor='rgb(255,0,0)';
+					changeBColor("anomalies");
+
+					}
+					var c= an.style.backgroundColor;
+				document.getElementById("etime").innerHTML=cd[3];
+				}
+
+			}
+		}
+	};
+	xhttp.open("POST", "getChartData.jsp", true);
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xhttp.send("id=" + sId + "");
+
+   
+    
+}
+
+
+
+function restart(){
+	//1-disable button and interval
+	clearInterval(interval);
+	document.getElementById("res").disabled=true;
+	load(true);
+	
+	
+}
+
+function saveApp() {
+
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+		if (xhttp.readyState == 4 && xhttp.status == 200) {
+			document.getElementById("buttonResult2").innerHTML = "Saved";
+			fadeout_wait("buttonResult2");
+		}
+	};
+	xhttp.open("POST", "updateApp.jsp", true);
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xhttp.send("name=" + document.getElementById("app").value+ "");
+	
+	
+	
+	
+	
+}
+
+function fadeout_wait(div){
+	setTimeout(function(){fadeOut(div)}, 3000);
+}
+function fadeOut(div){
+	var ele = document.getElementById(div);
+	if(ele.style.opacity === "")
+		ele.style.opacity = 1;
+	var opacity = ele.style.opacity
+	opacity -= 0.1;
+	if(opacity < 0){
+		opacity = 0;
+	}
+	ele.style.opacity = opacity;
+	if(opacity != 0){
+		setTimeout(function(){fadeOut(div)}, 100);
+	} else {
+		ele.innerHTML = "";
+		ele.style.opacity = 1;
+		// ele.style.filter = 'alpha(opacity=100)'; // IE fallback
+	}
+}
+function over(){
+	
+	var overlay = new ItpOverlay("body1");
+	overlay.show();
+}
+
+function fillStaleTable(result){
+	
+	var r=result.split(",");
+	var table = document.getElementById("Table");
+
+	for (var i=0; i<r.length;i++)
+		{
+	var tokens=r[i].split(":");
+	//                        0                                1                 2        3       4     5             6        
+	//result+=list.get(i).lastReadOffset+":"+list.get(i).lastWriteOffset+":"+appName+":"+key+":"+i+":"+type+":"+list.get(i).tid+",";
+
+	//<td id="td_<%=i%>" width="126px"><a onclick="selectedNewIndex(<%=list.get(i).lastReadOffset%>,<%=list.get(i).lastWriteOffset%>,'<%=appName%>', true, true, '<%=key%>',<%=i%>, '<%=type%>')"><%=list.get(i).tid%></a></td>
+
+	var tr = document.createElement("TR");
+	var td = document.createElement("TD");
+	td.setAttribute("width", "126px");
+
+	td.setAttribute("id", "td_"+tokens[4]);
+
+	td.setAttribute("align", "center");
+
+
+	
+	
+	
+	var link = document.createElement("A");
+	link.setAttribute("class", "f");
+
+	link.innerHTML=tokens[6];
+	// link.setAttribute("target", "_blank");
+	var f="selectedNewIndex("+tokens[0]+","+tokens[1]+",'"+tokens[2]+"',true,true,'"+tokens[3]+"',"+tokens[4]+",'"+tokens[5]+"')";
+	link.setAttribute("onclick",f);
+	td.appendChild(link);
+
+	tr.appendChild(td);
+
+	table.appendChild(tr);
+	
+		}
+
+}
+function loadTable(index, key, type){
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+		if (xhttp.readyState == 4 && xhttp.status == 200) {
+			//var log = document.getElementById("debug");
+			var result = xhttp.responseText.trim();
+			if (result==null){
+				alert("result==nulll");
+			}
+			
+			else{
+				if (result==="Finish")
+					;
+				else{
+					fillStaleTable(result);
+					index=index+100;
+					loadTable(index, key, type);
+				}
+							
+			}
+		}
+	};
+	xhttp.open("POST", "loadTable.jsp", true);
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	
+		xhttp.send("index="+index+"&key=" + key + "&type="+type+"");
+
+
+   
+
+	
+	
+}
+function zoom(percentage) {
+	var range = timeline.getWindow();
+	var interval = range.end - range.start;
+
+	timeline.setWindow({
+		start : range.start.valueOf() - interval * percentage,
+		end : range.end.valueOf() + interval * percentage
+	});
+}
+function load(restart) {
+//	alert("loading");
+	document.getElementById('zoomIn').onclick = function() {zoom(-0.2);};
+	document.getElementById('zoomOut').onclick = function() {zoom(0.2);};
+
+	var overlay = new ItpOverlay("body1");
+	overlay.show();
+
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+		if (xhttp.readyState == 4 && xhttp.status == 200) {
+			//var log = document.getElementById("debug");
+			var result = xhttp.responseText.trim();
+			if (result==null){
+				alert("result==nulll");
+			}
+			
+			else{
+				//var d=document.getElementById("debug");
+				//d.innerHTML="Result="+result;
+				var cd=result.split(";");
+				if(restart)
+					updateChart(cd[0]);
+				else
+				buildChart(cd[0]);
+				//alert(cd[1]+","+ cd[2]);
+				var lm=document.getElementById("lm");
+				lm.innerHTML="$"+numberWithCommas(cd[1]);
+				var an=document.getElementById("anomalies");
+				an.innerHTML=numberWithCommas(cd[2]);
+				document.getElementById("etime").innerHTML=cd[3];
+				
+				interval=setInterval(function (){updateStats(true)}, 10000);
+				if (restart){
+				
+					document.getElementById("res").disabled=false;
+
+
+				}
+				overlay.hide("body1");
+
+				
+			
+			}
+		}
+	};
+	xhttp.open("POST", "load.jsp", true);
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	if (restart===true)
+	xhttp.send("restart=true"+"&id=" + sId + "");
+	else
+		xhttp.send("restart=false"+"&id=" + sId + "");
+
+
+   
+    
+}
+
+function loading(){
+	var eTable = document.getElementById("eTable");
+	var tTable = document.getElementById("tTable");
+	var eTable_loadPic = document.createElement("img");
+	var tTable_loadPic = document.createElement("img");
+	var eTable_layerPic = document.createElement("img");
+	var tTable_layerPic = document.createElement("img");
+	var body = document.getElementById("body");
+	eTable_loadPic.setAttribute("id", "eloadingPic");
+	eTable_loadPic.setAttribute("src", "img/ajax-loader.gif");
+	tTable_loadPic.setAttribute("id", "tloadingPic");
+	tTable_loadPic.setAttribute("src", "img/ajax-loader.gif");
+	var eNode = eTable;
+	var eLeft = 0, eTop = 0;
+	while (eNode.tagName !== "BODY") {
+		eLeft += eNode.offsetLeft;
+		eTop += eNode.offsetTop;
+		eNode = eNode.offsetParent;
+	}
+	var ePicleft = eLeft + eTable.offsetWidth / 2 - 110;
+	var ePictop = eTop + eTable.offsetHeight / 2 - 10;
+	eTable_loadPic.setAttribute("style", "position:absolute;left:" + ePicleft + "px;top:" + ePictop + "px;z-index:2");
+	eTable_layerPic.setAttribute("id", "elayerPic");
+	eTable_layerPic.setAttribute("src", "img/layer.png");
+	eTable_layerPic.setAttribute("width", eTable.offsetWidth + "px");
+	eTable_layerPic.setAttribute("height", eTable.offsetHeight + "px");
+	eTable_layerPic.setAttribute("style", "position:absolute;left:" + eLeft + "px;top:" + eTop + "px;z-index:1");
+	body.appendChild(eTable_loadPic);
+	body.appendChild(eTable_layerPic);
+	
+	var tNode = tTable;
+	var tLeft = 0, tTop = 0;
+	while (tNode.tagName !== "BODY") {
+		tLeft += tNode.offsetLeft;
+		tTop += tNode.offsetTop;
+		tNode = tNode.offsetParent;
+	}
+	var tPicleft = tLeft + tTable.offsetWidth / 2 - 110;
+	var tPictop = tTop + tTable.offsetHeight / 2 - 10;
+	tTable_loadPic.setAttribute("style", "position:absolute;left:" + tPicleft + "px;top:" + tPictop + "px;z-index:2");
+	tTable_layerPic.setAttribute("id", "tlayerPic");
+	tTable_layerPic.setAttribute("src", "img/layer.png");
+	tTable_layerPic.setAttribute("width", tTable.offsetWidth + "px");
+	tTable_layerPic.setAttribute("height", tTable.offsetHeight + "px");
+	tTable_layerPic.setAttribute("style", "position:absolute;left:" + tLeft + "px;top:" + tTop + "px;z-index:1");
+	body.appendChild(tTable_loadPic);
+	body.appendChild(tTable_layerPic);
+}
+
+function doneLoading(){
+	var pic = document.getElementById("eloadingPic");
+	pic.parentNode.removeChild(pic);
+	pic = document.getElementById("elayerPic");
+	pic.parentNode.removeChild(pic);
+	pic = document.getElementById("tloadingPic");
+	pic.parentNode.removeChild(pic);
+	pic = document.getElementById("tlayerPic");
+	pic.parentNode.removeChild(pic);
+}
+function updateStatsM(obj) {
+	mainTR = document.getElementById("stats");
+	while (mainTR.childElementCount > 0) {
+		mainTR.removeChild(mainTR.lastChild);
+	}
+	for(var i = 0; i < obj.length; i++){
+		var mainTD = document.createElement("TD");
+		//mainTD.setAttribute("style", "padding: 0px");
+		var table = document.createElement("table");
+		table.setAttribute("class", "evenOdd");
+		table.setAttribute("style", "border-collapse: collapse;");
+		var tr = document.createElement("TR");
+		var td = document.createElement("TD");
+		td.appendChild(document.createTextNode(obj[i].cID));
+		td.setAttribute("style", "padding: 1px 3px;");
+		tr.appendChild(td);
+		table.appendChild(tr);
+		tr = document.createElement("TR");
+		td = document.createElement("TD");
+		td.appendChild(document.createTextNode(obj[i].reads));
+		td.setAttribute("style", "padding: 1px 3px;");
+		tr.appendChild(td);
+		table.appendChild(tr);
+		tr = document.createElement("TR");
+		td = document.createElement("TD");
+		td.appendChild(document.createTextNode(obj[i].writes));
+		td.setAttribute("style", "padding: 1px 3px;");
+		tr.appendChild(td);
+		table.appendChild(tr);
+//		tr = document.createElement("TR");
+//		td = document.createElement("TD");
+//		td.appendChild(document.createTextNode(obj[i].stales));
+//		td.setAttribute("style", "padding: 1px 3px;");
+//		tr.appendChild(td);
+//		table.appendChild(tr);
+//		tr = document.createElement("TR");
+//		td = document.createElement("TD");
+//		td.appendChild(document.createTextNode(obj[i].avgSS));
+//		td.setAttribute("style", "padding: 1px 3px;");
+//		tr.appendChild(td);
+//		table.appendChild(tr);
+//		tr = document.createElement("TR");
+//		td = document.createElement("TD");
+//		td.appendChild(document.createTextNode(obj[i].maxSS));
+//		td.setAttribute("style", "padding: 1px 3px;");
+//		tr.appendChild(td);
+//		table.appendChild(tr);
+//		tr = document.createElement("TR");
+//		td = document.createElement("TD");
+//		td.appendChild(document.createTextNode(obj[i].avgMem));
+//		td.setAttribute("style", "padding: 1px 3px;");
+//		tr.appendChild(td);
+//		table.appendChild(tr);
+//		tr = document.createElement("TR");
+//		td = document.createElement("TD");
+//		td.appendChild(document.createTextNode(obj[i].maxMem));
+//		td.setAttribute("style", "padding: 1px 3px;");
+//		tr.appendChild(td);
+//		table.appendChild(tr);
+//		tr = document.createElement("TR");
+//		td = document.createElement("TD");
+//		td.appendChild(document.createTextNode(obj[i].pDis));
+//		td.setAttribute("style", "padding: 1px 3px;");
+//		tr.appendChild(td);
+//		table.appendChild(tr);
+//		tr = document.createElement("TR");
+//		td = document.createElement("TD");
+//		td.appendChild(document.createTextNode(obj[i].fDis));
+//		td.setAttribute("style", "padding: 1px 3px;");
+//		tr.appendChild(td);
+//		table.appendChild(tr);
+//		tr = document.createElement("TR");
+//		td = document.createElement("TD");
+//		td.appendChild(document.createTextNode(obj[i].duration));
+//		td.setAttribute("style", "padding: 1px 3px;");
+//		tr.appendChild(td);
+//		table.appendChild(tr);
+		mainTD.appendChild(table);
+		mainTR.appendChild(mainTD);
+	}
+}
+
+function fill(data) {
+	if (data.startsWith('ERROR')) {
+		alert(data);
+	} else {
+		var obj = JSON.parse(data);
+		var table = document.getElementById("ERTable");
+		while (table.childElementCount > 0) {
+			table.removeChild(table.lastChild);
+		}
+		updateStatsM(obj.stats);
+		for (var i = 0; i < obj.stales.entities.length; i++) {
+			var tr = document.createElement("TR");
+			var tdName = document.createElement("TD");
+			tdName.setAttribute("width", "126px");
+			var tdCount = document.createElement("TD");
+			tdCount.setAttribute("width", "100px");
+			tdCount.setAttribute("style", "text-align:center;");
+			var link = document.createElement("A");
+			// link.setAttribute("target", "_blank");
+			link.setAttribute("href", "vTimeline2.jsp?key=" + obj.stales.entities[i].name + "&type=e");
+			link.setAttribute("target", "_blank");
+			var ex = "";
+			if(obj.stales.entities[i].name.length > 12){
+				ex = "...";
+			}
+			link.appendChild(document.createTextNode(obj.stales.entities[i].name.substring(0,12)+ex));
+			tdName.appendChild(link);
+			tdCount.appendChild(document.createTextNode(obj.stales.entities[i].num));
+			tr.appendChild(tdName);
+			tr.appendChild(tdCount);
+			table.appendChild(tr);
+		}
+		table = document.getElementById("TTable");
+		while (table.childElementCount > 0) {
+			table.removeChild(table.lastChild);
+		}
+		for (var i = 0; i < obj.stales.transactions.length; i++) {
+			var tr = document.createElement("TR");
+			var tdName = document.createElement("TD");
+			tdName.setAttribute("width", "126px");
+			var tdCount = document.createElement("TD");
+			tdCount.setAttribute("width", "100px");
+			tdCount.setAttribute("style", "text-align:center;");
+			var link = document.createElement("A");
+			// link.setAttribute("target", "_blank");
+			link.setAttribute("href", "vTimeline2.jsp?key=" + obj.stales.transactions[i].name + "&type=t");
+			link.setAttribute("target", "_blank");
+
+			link.appendChild(document.createTextNode(obj.stales.transactions[i].name));
+			tdName.appendChild(link);
+			tdCount.appendChild(document.createTextNode(obj.stales.transactions[i].num));
+			tr.appendChild(tdName);
+			tr.appendChild(tdCount);
+			table.appendChild(tr);
+		}
+	}
+//	doneLoading();
+}
+function getData() {
+//	loading();
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+		if (xhttp.readyState == 4 && xhttp.status == 200) {
+			if (xhttp.responseText.trim() != "null")
+				fill(xhttp.responseText.trim());
+		} else {
+			// document.getElementById("output").innerHTML = "Failed. readyState
+			// = " + xhttp.readyState + "... status = " + xhttp.status;
+		}
+	};
+	xhttp.open("POST", "vGetStats2.jsp", true);
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xhttp.send();
+}
+
+function modifyThreads(){
+	 if (sId==="null"){
+		 return;
+	 }
+	document.getElementById("applyT").disabled=true;
+	var overlay2 = new ItpOverlay('body2');
+	overlay2.show('body2');
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+		if (xhttp.readyState == 4 && xhttp.status == 200) {
+			//var log = document.getElementById("debug");
+			var result = xhttp.responseText.trim();
+			if (result==null){
+				
+				document.getElementById("buttonResult").innerHTML = "Resul==null!!";
+				fadeout_wait("buttonResult");
+			}
+			
+			else{
+				document.getElementById("buttonResult").innerHTML =result;
+				fadeout_wait("buttonResult");
+				}
+				document.getElementById("applyT").disabled=false;
+				overlay2.hide("body2");
+			
+			
+		}
+	};
+	xhttp.open("POST", "mThreads.jsp", true);
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	if (document.getElementById("s").checked===true)
+	xhttp.send("single=true"+"&id=" + sId + "");
+	else
+		xhttp.send("single=false"+"&id=" + sId + "");
+	
+}
+function newDate(days) {
+	return moment().add(days, 's').toDate();
+}
+
+function newDateString(days) {
+	return moment().add(days, 's').format(timeFormat);
+}
+
+function newTimestamp(days) {
+	return moment().add(days, 's').unix();
+}

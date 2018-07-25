@@ -1,0 +1,74 @@
+<%@ page import="java.sql.*"%>
+<%@ page import="edu.usc.stalemeter.website.*"%>
+<%@ page import="edu.usc.stalemeter.KafkaScripts"%>
+<%
+	if ((session.getAttribute("userid") == null) || (session.getAttribute("userid") == "")) {
+		out.print("You are not logged in<br/><a href=\"index.jsp\">Please Login</a>");
+	} else {
+		int userid = (int) session.getAttribute("userid");
+		session.removeAttribute("appid");
+		Class.forName("com.mysql.jdbc.Driver");
+		ResultSet rs = MySQL.getApps(userid);
+%>
+<head>
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="stylesheet" href="css/menubar.css" type="text/css">
+</head>
+<body style="text-align: center">
+	<ul>
+		<li><a class="active" href="mainPage.jsp">Applications</a></li>
+		<li style="float: right"><a href="logout.jsp">Logout</a></li>
+	</ul>
+	<br />
+	<div style="text-align: center; margin: auto;">
+		Welcome
+		<%=session.getAttribute("username")%></div>
+	<br />	
+	<%
+		if (request.getAttribute("info") != null)
+			if (request.getAttribute("info").equals("error")) {
+	%>
+	<div style="text-align: center;margin: auto; font-family: sans-serif; font-weight: bold; color: red;"><%=request.getAttribute("errorMSG")%></div>
+	<%
+		}
+	%>
+	<table class="Shadow" style="margin-left: auto; margin-right: auto; border: solid 1px black;">
+		<tr>
+			<th colspan="4">Applications</th>
+		</tr>
+		<tr>
+			<td colspan="4">
+				<form method="post" action="2addapp.jsp">
+					<input name="app" type="text" /> <input type="submit" value="Add" />
+				</form>
+			</td>
+		</tr>
+		<%
+			while (rs.next()) {
+		%>
+		<tr>
+			<td><%=rs.getString("name")%></td>
+			<td>
+				<form method="post" action="runVisualizer.jsp" style="margin-bottom: 0px;">
+					<input type="hidden" name="appName" value="<%=session.getAttribute("username") + "_" + rs.getString("name")%>" /> <input type="hidden" name="appid" value="<%=rs.getString("aid")%>" /> <input type="submit" value="Visualize" />
+				</form>
+			</td>
+			<td>
+				<form method="post" action="app.jsp" style="margin-bottom: 0px;">
+					<input type="hidden" name="userName" value="<%=session.getAttribute("username")%>" /> <input type="hidden" name="appName" value="<%=rs.getString("name")%>" /> <input type="hidden" name="appid" value="<%=rs.getString("aid")%>" /> <input type="submit" value="Edit" />
+				</form>
+			</td>
+			<td>
+				<form method="post" action="2delapp.jsp" style="margin-bottom: 0px;">
+					<input type="hidden" name="appid" value="<%=rs.getString("aid")%>" /> <input class="delete" type="submit" value="&#10006;" />
+				</form>
+			</td>
+		</tr>
+		<%
+			}
+		%>
+	</table>
+</body>
+<%
+	}
+%>

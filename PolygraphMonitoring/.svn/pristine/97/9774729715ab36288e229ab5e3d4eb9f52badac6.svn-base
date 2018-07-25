@@ -1,0 +1,450 @@
+package edu.usc.stalemeter;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Properties;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringDeserializer;
+
+import edu.usc.stalemeter.website.PolygraphUISettings;
+import edu.usc.stalemeter.website.StaleLog;
+
+public class StatsConsumer {
+	private KafkaConsumer<String, String> consumer;
+	private TopicPartition topicPartition = null;
+	private List<TopicPartition> partitions = new ArrayList<TopicPartition>();
+	private String id;
+	private long offset;
+
+	private HashSet<String> staleIds = null;
+	private HashMap<String, ArrayList<LogStaleRecord>> erStale = null;
+	private HashMap<String, ArrayList<LogStaleRecord>> tStale = null;
+	private String stats = "";
+	public HashMap<String, ArrayList<StaleLog>> eStaleLog = new HashMap<String, ArrayList<StaleLog>>();
+	public HashMap<String, ArrayList<StaleLog>> tStaleLog = new HashMap<String, ArrayList<StaleLog>>();
+	public Stats[] clientsStats = null;
+
+	private enum ConsumerType {
+		Stale, Stats;
+	}
+
+	private ConsumerType consumerType;
+
+	public StatsConsumer(String id, String topic, int partition, String kafkaServer) {
+		// KafkaScripts.createTopic("stats_"+application2,2);
+		topic = topic.toUpperCase();
+		this.id = id;
+		switch (partition) {
+		case 0:
+			consumerType = ConsumerType.Stats;
+			break;
+		case 1:
+			consumerType = ConsumerType.Stale;
+			erStale = new HashMap<String, ArrayList<LogStaleRecord>>();
+			tStale = new HashMap<String, ArrayList<LogStaleRecord>>();
+			staleIds = new HashSet<String>();
+			offset = 0;
+			break;
+		}
+		topicPartition = new TopicPartition(topic, partition);
+		partitions.add(topicPartition);
+		Properties props = new Properties();
+		props.put("bootstrap.servers", kafkaServer);
+		props.put("enable.auto.commit", "false");
+		props.put("group.id", this.id);
+		props.put("key.deserializer", StringDeserializer.class.getName());
+		props.put("value.deserializer", StringDeserializer.class.getName());
+		this.consumer = new KafkaConsumer<String, String>(props);
+		consumer.assign(partitions);
+		consumer.seekToBeginning(partitions);
+
+	}
+
+	public ConsumerRecords<String, String> poll(long offset1) {
+
+		if (offset1 == 0) {
+			consumer.seekToBeginning(partitions);
+		} else if (offset1 == -1L) {
+			consumer.seekToEnd(partitions);
+		} else if (offset1 == -2L) {
+
+		} else {
+			consumer.seek(topicPartition, offset1);
+		}
+		ConsumerRecords<String, String> records = consumer.poll(1000);
+		System.out.println("from offset (" + offset1 + ") is records empty? " + records.isEmpty() + " ... count = " + records.count());
+		return records;
+	}
+
+	public void close() {
+		consumer.close();
+	}
+
+	public void updateStats() {
+		System.out.println("Function updateStats() 91");
+		ConsumerRecords<String, String> records;
+		switch (consumerType) {
+		case Stats:
+			records = poll(-1);// Add Together with multiple validator.
+			if (records.isEmpty()) {
+				records = poll(consumer.position(topicPartition) - 1);
+			}
+			for (ConsumerRecord<String, String> record : records) {
+				stats = record.value();
+				break;
+			}
+			stats = stats.replaceAll("[\n]", "");
+			break;
+
+		case Stale:
+			records = poll(offset);
+			for (ConsumerRecord<String, String> record : records) {
+				LogStaleRecord log = new LogStaleRecord(record.value().replaceAll("[\n]", ""));
+				if (staleIds.contains(log.getId()))
+					continue;
+				staleIds.add(log.getId());
+				ArrayList<LogStaleRecord> al = tStale.get(log.getLog().getActionName());
+				if (al == null)
+					al = new ArrayList<LogStaleRecord>();
+				al.add(log);
+				tStale.put(log.getLog().getActionName(), al);
+				for (Entity e : log.getLog().getEntities()) {
+					ArrayList<LogStaleRecord> al2 = erStale.get(e.getEntityKey());
+					if (al2 == null)
+						al2 = new ArrayList<LogStaleRecord>();
+					al2.add(log);
+					erStale.put(e.getEntityKey(), al2);
+				}
+			}
+
+		}
+	}
+
+	public LogRecord getStaleLog(StaleLog s) {
+		System.out.println("Function getStaleLog(StaleLog s) 130");
+		ConsumerRecords<String, String> records;
+		records = poll(s.staleOffset);
+		for (ConsumerRecord<String, String> record : records) {
+			return LogRecord.createLogRecord(record.value());
+		}
+		return null;
+	}
+
+	public ArrayList<LogRecord> getLogs(long offset, String id, long endTime) {
+		// System.out.println(String.format("Function getLogs(long offset = %d, String id = %s, long endTime = %d) 141", offset, id, endTime));
+		// ArrayList<LogRecord> result = new ArrayList<LogRecord>();
+		// ConsumerRecords<String, String> records;
+		// // int count = 1;
+		// long lastProcessedOffset = offset;
+		// while (lastProcessedOffset < (offset + PolygraphUISettings.numOfLogsBeforeLast)) {
+		// records = poll(lastProcessedOffset);
+		// for (ConsumerRecord<String, String> record : records) {
+		// lastProcessedOffset = record.offset();
+		// LogRecord r = LogRecord.createLogRecord(record.value());
+		// if (!r.getId().equals(id) && r.getStartTime() <= endTime)
+		// result.add(r);
+		// // if(count++ == PolygraphUISettings.numOfLogsBeforeLast)
+		// // return result;
+		// }
+		// }
+		// return result;
+
+		System.out.println("Function getLogs(long offset, long endTime)");
+		ArrayList<LogRecord> result = new ArrayList<LogRecord>();
+		ConsumerRecords<String, String> records;
+		// int count = 1;
+		long lastProcessedOffset = offset - PolygraphUISettings.numOfLogsBeforeLast;
+		if (lastProcessedOffset < 0)
+			lastProcessedOffset = 0;
+		while (lastProcessedOffset < offset) {
+
+			records = poll(lastProcessedOffset);
+			for (ConsumerRecord<String, String> record : records) {
+				lastProcessedOffset = record.offset();
+				// System.out.println(String.format("lastProcessedOffset(%d) < (%d)offset ... records.count() = %d", lastProcessedOffset , offset, records.count()));
+				if (lastProcessedOffset > offset) {
+					break;
+				}
+				LogRecord r = LogRecord.createLogRecord(record.value());
+				if (r.getStartTime() <= endTime) {
+					if (!r.getId().equals(id) && r.getStartTime() <= endTime) {
+						result.add(r);
+					}
+				}
+				// if(count++ == PolygraphUISettings.numOfLogsBeforeLast)
+				// return result;
+			}
+		}
+		System.out.println("MR1 ... result.size = " + result.size());
+		return result;
+
+	}
+
+	public ArrayList<LogRecord> getLogs(long offset, long endTime) {
+		System.out.println("Function getLogs(long offset, long endTime)");
+		ArrayList<LogRecord> result = new ArrayList<LogRecord>();
+		ConsumerRecords<String, String> records;
+		// int count = 1;
+		long lastProcessedOffset = offset - PolygraphUISettings.numOfLogsBeforeLast;
+		if (lastProcessedOffset < 0)
+			lastProcessedOffset = 0;
+		while (lastProcessedOffset < offset) {
+
+			records = poll(lastProcessedOffset);
+			for (ConsumerRecord<String, String> record : records) {
+				lastProcessedOffset = record.offset();
+				// System.out.println(String.format("lastProcessedOffset(%d) < (%d)offset ... records.count() = %d", lastProcessedOffset , offset, records.count()));
+				if (lastProcessedOffset > offset) {
+					break;
+				}
+				LogRecord r = LogRecord.createLogRecord(record.value());
+				if (r.getStartTime() <= endTime) {
+					result.add(r);
+				}
+				// if(count++ == PolygraphUISettings.numOfLogsBeforeLast)
+				// return result;
+			}
+		}
+		System.out.println(lastProcessedOffset);
+		return result;
+	}
+
+	public StaleLog getOneLog() {
+		System.out.println("Function getOneLog() 188");
+		ConsumerRecords<String, String> records;
+		records = poll(offset);
+		boolean b = true;
+		for (ConsumerRecord<String, String> record : records) {
+			// if(b){
+			// b = false;
+			// continue;
+			// }
+			// R,32-9,0,0,1907,1,1233
+			return new StaleLog(record.value());
+		}
+		return null;
+	}
+
+	public String statsToJSON() {
+		System.out.println("Function statsToJSON() 205");
+		ConsumerRecords<String, String> records;
+		do {
+			records = poll(-2L);
+			for (ConsumerRecord<String, String> record : records) {
+				// offset = record.offset();
+				Stats s = new Stats(record.value());
+				if (clientsStats == null) {
+					clientsStats = new Stats[Integer.parseInt(record.value().split(",")[0])];
+				}
+				clientsStats[s.clientID] = s;
+			}
+			// offset++;
+		} while (!records.isEmpty());
+		String json = "[";
+		String comma = "";
+		Stats overall = new Stats("0,-1,0,0,0,0,0,0,0,0,0,-");
+		if (clientsStats != null) {
+			for (Stats s : clientsStats) {
+				json += comma + String.format("{\"cID\":\"%s\",\"reads\":%d,\"writes\":%d,\"stales\":%d,\"avgSS\":%d,\"maxSS\":%d,\"avgMem\":%d,\"maxMem\":%d,\"pDis\":%d,\"fDis\":%d,\"duration\":\"%s\"}", "Client-" + s.clientID, s.reads, s.write, s.stales, s.avgSS, s.maxSS, s.avgMem, s.maxMem, s.partialDiscard, s.fullDiscard, s.duration);
+				overall.reads += s.reads;
+				overall.write += s.write;
+				overall.stales += s.stales;
+				overall.avgSS += s.avgSS;
+				overall.maxSS += s.maxSS;
+				overall.avgMem += s.avgMem;
+				overall.maxMem += s.maxMem;
+				overall.partialDiscard += s.partialDiscard;
+				overall.fullDiscard += s.fullDiscard;
+				comma = ",";
+			}
+		}
+		json += comma + String.format("{\"cID\":\"%s\",\"reads\":%d,\"writes\":%d,\"stales\":%d,\"avgSS\":%d,\"maxSS\":%d,\"avgMem\":%d,\"maxMem\":%d,\"pDis\":%d,\"fDis\":%d,\"duration\":\"%s\"}", "Overall", overall.reads, overall.write, overall.stales, overall.avgSS, overall.maxSS, overall.avgMem, overall.maxMem, overall.partialDiscard, overall.fullDiscard, overall.duration);
+		json += "]";
+		return json;
+	}
+
+	public String staleToJSON() {
+		System.out.println("Function staleToJSON() 234");
+		ConsumerRecords<String, String> records;
+		do {
+			records = poll(offset);
+			for (ConsumerRecord<String, String> record : records) {
+				offset = record.offset();
+				StaleLog s = new StaleLog(record.value());
+				ArrayList<StaleLog> al = tStaleLog.get(s.actionName);
+				if (al == null) {
+					al = new ArrayList<StaleLog>();
+					al.add(s);
+					tStaleLog.put(s.actionName, al);
+				} else {
+					al.add(s);
+				}
+				for (String str : s.entities) {
+					al = eStaleLog.get(str);
+					if (al == null) {
+						al = new ArrayList<StaleLog>();
+						al.add(s);
+						eStaleLog.put(str, al);
+					} else {
+						al.add(s);
+					}
+
+				}
+			}
+			offset++;
+		} while (!records.isEmpty());
+		String json = "{\"entities\":[";
+		String comma = "";
+		for (Entry<String, ArrayList<StaleLog>> l : eStaleLog.entrySet()) {
+			json += comma + "{\"name\":\"" + l.getKey() + "\", \"num\":" + l.getValue().size() + "}";
+			comma = ",";
+		}
+		json += "], \"transactions\":[";
+		comma = "";
+		for (Entry<String, ArrayList<StaleLog>> l : tStaleLog.entrySet()) {
+			json += comma + "{\"name\":\"" + l.getKey() + "\", \"num\":" + l.getValue().size() + "}";
+			comma = ",";
+		}
+		json += "]}";
+		return json;
+	}
+
+	public String dataToSend() {
+		String result = "";
+		switch (consumerType) {
+		case Stats:
+			if (!stats.equals("")) {
+				String[] tokens = stats.split("[,]");
+				System.out.println("stats: " + stats);
+				result = "{";
+				for (int i = 0; i < tokens.length; i++) {
+					String[] tokens2 = tokens[i].split("[=]");
+					System.out.println("tokens[" + i + "]: " + tokens[i]);
+					if (i != 0)
+						result += ", ";
+					result += "\"" + tokens2[0] + "\"";
+					result += ":";
+					result += "\"" + tokens2[1] + "\"";
+				}
+				result += "}";
+			} else {
+				result = "{}";
+			}
+
+			break;
+		case Stale:
+			result += "{\"entities\":[";
+			result += getHashString(erStale);
+			result += "], \"transactions\":[";
+			result += getHashString(tStale);
+			result += "]}";
+
+			break;
+		}
+		return result;
+	}
+
+	private String getHashString(HashMap<String, ArrayList<LogStaleRecord>> hash) {
+		String result = "";
+		int count = 0;
+		for (String key : hash.keySet()) {
+			result += "{\"name\":\"" + key + "\",\"sCount\":\"" + hash.get(key).size() + "\"}";
+			count++;
+			if (count != hash.size()) {
+				result += ",";
+			}
+		}
+		return result;
+	}
+
+	public static void main(String[] argv) {
+		// LogRecord r = LogRecord.createLogRecord("R,MR1,101,0,1,99999999999,MEMBER;2521;Friend_CNT:10:R");
+		// staleLogger.loggingStale(r, -1, -1,"", 1, 1, "/home/mr1/workspace/WebTest/WebContent");
+
+		// if(consumerStale == null){
+		// System.out.println("consumerStale = null");
+		// //out.println("consumerStale = null");
+		// }
+		// if (consumerStale == null) {
+		String kafkaServer = "10.0.0.145:9092";
+		// StatsConsumer consumerStale = new StatsConsumer("STATS_T1_APP3", "STATS_T1_APP3", 1, kafkaServer);
+		// session.setAttribute("consumerStale", consumerStale);
+		// }
+		// if (consumerStats == null) {
+		StatsConsumer consumerStats = new StatsConsumer("MR1", "T1_MYAPP1", 0, kafkaServer);
+		// session.setAttribute("consumerStats", consumerStats);
+		// System.out.println("hash == null");
+		// session.setAttribute("hash", new HashMap<String, String>());
+		// ((HashMap<String, String>) session.getAttribute("hash")).put("A", "Test");
+		// }
+		// HashMap<String, String> hash = (HashMap<String, String>) session.getAttribute("hash");
+		// System.out.println("hash.get(\"A\") = " + hash.get("A"));
+		consumerStats.updateStats();
+		String result = "{\"stats\" : " + consumerStats.dataToSend();
+		// consumerStale.updateStats();
+		// result += ",\"stales\" : "+consumerStale.dataToSend()+"}";
+
+		System.out.println(result);
+
+		if (true)
+			return;
+		// StatsConsumer consumerStale = null;// (StatsConsumer)session.getAttribute("consumerStale");
+		// StatsConsumer consumerStats = null;// (StatsConsumer)session.getAttribute("consumerStats");
+		// if (consumerStale == null) {
+		// consumerStale = new StatsConsumer("g1", "BG", 1);
+		// }
+		// if (consumerStats == null) {
+		// consumerStats = new StatsConsumer("g1", "BG", 0);
+		// }
+		// HashMap<String, String> hash = (HashMap<String, String>)
+		// session.getAttribute("hash");
+		// System.out.println("hash.get(\"A\") = " + hash.get("A"));
+		consumerStats.updateStats();
+		// String result = "{" + consumerStats.dataToSend();
+		/// consumerStale.updateStats();
+		// result += "," + consumerStale.dataToSend() + "}";
+		System.out.println(result);
+	}
+
+	public ArrayList<LogStaleRecord> getStaleList(String key, String type) {
+		switch (type) {
+		case "e":
+			return erStale.get(key);
+		case "t":
+			return tStale.get(key);
+		}
+		return null;
+	}
+
+	public LogStaleRecord getLog(String key, String type, String id) {
+		switch (type) {
+		case "e": {
+			ArrayList<LogStaleRecord> al = erStale.get(key);
+			for (LogStaleRecord log : al) {
+				if (log.getId().equals(id))
+					return log;
+			}
+		}
+			break;
+
+		case "t": {
+			ArrayList<LogStaleRecord> al = tStale.get(key);
+			for (LogStaleRecord log : al) {
+				if (log.getId().equals(id))
+					return log;
+			}
+		}
+			break;
+
+		}
+		return null;
+	}
+
+}

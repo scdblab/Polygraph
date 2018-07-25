@@ -1,0 +1,45 @@
+import javax.servlet.annotation.WebListener;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionListener;
+
+import demo.DemoMain;
+import demo.MyThread;
+import edu.usc.polygraph.StatsConsumer;
+
+@WebListener
+public class MyHttpSessionListener implements HttpSessionListener {
+
+    
+	@Override
+	public void sessionCreated(HttpSessionEvent arg0) {
+	//	System.out.println("session created:"+arg0.getSession().getId());
+		arg0.getSession().setMaxInactiveInterval(10*60);
+
+		
+	}
+
+	@Override
+	public void sessionDestroyed(HttpSessionEvent arg0) {
+		String id=arg0.getSession().getId();
+		HttpSession session = arg0.getSession();
+		id="DEMO-"+id;
+		StatsConsumer c1=(StatsConsumer)session.getAttribute("_consumerStale");
+		if (c1!=null){
+			c1.close();
+			
+		}
+		c1=(StatsConsumer)session.getAttribute("_consumerW");
+		if (c1!=null){
+			c1.close();
+			
+		}
+		DemoMain.close(id);
+		MyThread.deleteFromDB(id);
+		//System.out.println("session dest:"+arg0.getSession().getId());
+		
+		
+	}
+
+    // ...
+}

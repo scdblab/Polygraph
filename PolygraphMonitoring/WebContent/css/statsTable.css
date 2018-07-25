@@ -1,0 +1,12 @@
+@CHARSET "UTF-8";
+
+.stateCID{
+	padding: 0px 4px;
+	font-size: 12px;
+}
+
+.stateElement{
+	border-top: 1px solid black;
+	padding: 0px 4px;
+	font-size: 12px;
+}

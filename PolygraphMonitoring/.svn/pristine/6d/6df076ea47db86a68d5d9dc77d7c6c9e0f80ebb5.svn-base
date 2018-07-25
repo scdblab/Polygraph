@@ -1,0 +1,7 @@
+create table trans (
+	tid INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	uid INT(6) NOT NULL,
+	aid INT(6) NOT NULL,
+	name VARCHAR(100) NOT NULL,
+	code VARCHAR(10240)
+)

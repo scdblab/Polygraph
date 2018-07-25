@@ -1,0 +1,34 @@
+<%@page import="java.util.ArrayList"%>
+<%@page import="edu.usc.stalemeter.codegenerator.CodeGeneratorFunctions"%>
+<%@page import="edu.usc.stalemeter.website.MySQLResponse.MySQLStatus"%>
+<%@page import="edu.usc.stalemeter.website.MySQLResponse"%>
+<%@page import="edu.usc.stalemeter.website.MySQL"%>
+<%@page import="edu.usc.stalemeter.KafkaScripts"%>
+<%@page import="edu.usc.stalemeter.website.AppElement"%>
+<%@ page import="java.sql.*"%>
+<%
+	if ((session.getAttribute("userid") == null) || (session.getAttribute("userid") == "")) {
+		out.print("You are not logged in<br/><a href=\"index.jsp\">Please Login</a>");
+	} else {
+		int userid = (int) session.getAttribute("userid");
+		int appid = Integer.parseInt(request.getParameter("appid"));
+		String topic = request.getParameter("appName");
+		//if(CodeGeneratorFunctions.isAppOK(userid, appid)){
+			//ArrayList<String> topics = getTopics(userid, appid);
+			topic = "BGSTALE";
+			if(KafkaScripts.isTopicExist("STATS_" + topic)){
+				AppElement appE = new AppElement(userid, appid);
+				session.setAttribute(topic, appE);			
+				response.sendRedirect("validationStates.jsp?appName=" + topic);//vTest2
+			} else {
+				request.setAttribute("info", "error");
+				request.setAttribute("errorMSG", "Topic STATS_" + topic + " doesn't exist in Kafka.");
+				request.getRequestDispatcher("mainPage.jsp").forward(request, response);				
+			}
+		/*} else {
+			request.setAttribute("info", "error");
+			request.setAttribute("errorMSG", "Something missing in the app.");
+			request.getRequestDispatcher("mainPage.jsp").forward(request, response);			
+		}*/
+	}
+%>

@@ -1,0 +1,70 @@
+package edu.usc.polygraph.website;
+
+public class PolygraphUISettings {
+	
+	// MySQL Settings
+	
+	public static final String connectionString = "jdbc:mysql://10.0.0.240:3306/stale_meter";
+	public static final String dbUsername = "cosar";
+	public static final String dbPassword = "gocosar";
+	public static final String MySQLDriver = "com.mysql.jdbc.Driver";
+	
+	// Kafka Settings	
+
+	public static final String KAFKA_FLDR = "./StaleMeter/kafkaServer/";
+	public static String KAFKA_HOST = "10.0.0.240:9092";
+	public static String ZOOKEEPER_HOST = KAFKA_HOST.split(":")[0]+":2181";
+	
+	//Validator Settings
+	
+	public static final int numOfPartitions = 1;
+	public static final int clientID = 0;
+	public static final int numOfClients = 1;
+	public static final int WEBSITE_NUM_OF_VALIDATORS = 1;
+
+//	public static final String WEBSITE_RESULT_PATH = "./applications/%d/%d/";
+//	public static final String WEBSITE_COMMON_PATH = "./applications/common/%s";
+	public static final String WEBSITE_RESULT_PATH = "/home/mr1/PolygraphUI/applications/%d/%d/";
+	public static final String WEBSITE_COMMON_PATH = "/home/mr1/PolygraphUI/common/%s";
+	public static final String WEBSITE_COMMON_ENTITY_CLASS = "Entity.java";
+	public static final String WEBSITE_COMMON_PROPERTY_CLASS = "Property.java";
+	public static final String WEBSITE_COMMON_HELPER_CLASS = "PolygraphHelper.java";
+	public static final String WEBSITE_JSON_FILE = "/JSONfile.txt";
+	
+	// UI Settings
+
+	public static final int width = 900;
+	public static final int canvasDivWidth = 500;
+	public static final int canvasDivHeight = 500;
+	public static final int canvasWidth = 1000;
+	public static final int canvasHeight = 1000;
+	public static final int transTableWidth = 400;
+	
+	//Constants
+
+	public static final char RECORD_ATTRIBUTE_SEPERATOR = ',';
+	public static final char ENTITY_SEPERATOR = '&';
+	public static final char PROPERY_SEPERATOR = '#';
+	public static final char PROPERY_ATTRIBUTE_SEPERATOR = ':';
+	public static final char ENTITY_ATTRIBUTE_SEPERATOR = ';';
+	public static final char RELATIONSHIP_ENTITY_SEPERATOR = PROPERY_SEPERATOR;
+	public static final char KEY_SEPERATOR = '-';
+	public static final String ENTITY_SEPERATOR_REGEX = "[" + ENTITY_SEPERATOR + "]";
+	public static final String ENTITY_ATTRIBUTE_SEPERATOR_REGEX = "[" + ENTITY_ATTRIBUTE_SEPERATOR + "]";
+	public static final String PROPERY_SEPERATOR_REGEX = "[" + PROPERY_SEPERATOR + "]";
+	public static final String PROPERY_ATTRIBUTE_SEPERATOR_REGEX = "[" + PROPERY_ATTRIBUTE_SEPERATOR + "]";
+	
+	public static final char UPDATE_RECORD = 'U';
+	public static final char READ_RECORD = 'R';
+	public static final char READ_WRITE_RECORD = 'Z';
+
+	public static final char NEW_VALUE_UPDATE = 'N';
+	public static final char INCREMENT_UPDATE = 'I';
+	public static final char DECREMENT_UPDATE_INTERFACE = 'Q';
+	public static final char NO_READ_UPDATE = 'X';
+	public static final char VALUE_READ = 'R';
+	public static final char VALUE_NA = 'U';
+	public static final char VALUE_DELETED = 'D';
+	
+	public static final int numOfLogsBeforeLast =1000;	
+}

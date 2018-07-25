@@ -1,0 +1,222 @@
+<%-- 
+    Document   : index
+    Created on : Aug 22, 2017, 2:06:23 PM
+    Author     : yaz
+--%>
+
+<!DOCTYPE html>
+
+<%@page import="edu.usc.polygraph.website.PolygraphUISettings"%>
+<html>
+    <head>
+       
+       <script type="text/javascript" src="javascript.js"></script>
+        
+  		<script src="moment.js"></script>
+		<script src="Chart.js"></script>
+		<script src="utils.js"></script>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+         
+        <title>Monitoring</title>
+		
+    <style type="text/css">
+  
+    </style>
+  <%@page import="edu.usc.polygraph.StatsConsumer"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="edu.usc.polygraph.website.MySQLResponse.MySQLStatus"%>
+<%@page import="edu.usc.polygraph.website.MySQLResponse"%>
+<%@page import="edu.usc.polygraph.website.MySQL"%>
+<%@page import="edu.usc.polygraph.KafkaScripts"%>
+<%@page import="edu.usc.polygraph.website.AppElement"%>
+<%@ page import="java.sql.*"%>
+    <%@ page import="demo.*"%>
+<%
+	//if (       (request.getParameter("appName") == null)
+	//		|| (request.getParameter("appName") == "")
+	//		|| (request.getParameter("kafkaIP") == null)
+	//		|| (request.getParameter("kafkaIP") == "")
+	//		|| (request.getParameter("zookeeperIP") == null)
+	//		|| (request.getParameter("zookeeperIP") == "")) {
+	//	request.setAttribute("info", "error");
+	//	request.setAttribute("errorMSG", "Missing inputs.");
+	//	request.getRequestDispatcher("visual.jsp").forward(request, response);
+	//} else {
+		String appName = (String)session.getAttribute("ssId");
+		//System.out.println(appName);
+		String kafka = PolygraphUISettings.KAFKA_HOST;
+		String zookeeper = PolygraphUISettings.ZOOKEEPER_HOST;
+		boolean doneLoading=false;
+		if(appName!=null){
+		session.setAttribute("appNameM", appName);
+		}
+		session.setAttribute("kafkaIP", kafka);
+		session.setAttribute("zookeeperIP", zookeeper);
+		String topic=null;
+		if(appName!=null){
+			topic = "STATS_" + appName;
+		}
+		if( appName!=null &&  KafkaScripts.isTopicExist(topic, zookeeper)){
+			if(session.getAttribute(topic+"_consumerStale") ==null){
+		
+			StatsConsumer consumerStale = new StatsConsumer(topic, topic, 1, kafka);
+			session.setAttribute(topic+"_consumerStale", consumerStale);
+			}
+			if(session.getAttribute(topic+"_consumerStats") ==null){
+			StatsConsumer consumerStats = new StatsConsumer(topic, topic, 0, kafka);
+			session.setAttribute(topic+"_consumerStats", consumerStats);
+			}
+			doneLoading=true;
+			
+		} 
+	
+%>
+	<script type="text/javascript">var done="<%=doneLoading%>";
+    if (done==="false"){
+    	alert("Session or Kafka topic not exist. Please visit Demo main page");
+    }
+    else{
+    	getData();
+    	setInterval(getData, 20000);
+    	}
+    
+    </script>
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+                      <link rel="stylesheet" href="css/style2.css" type="text/css">
+    
+<style>
+table.evenOdd tr:nth-child(even) {
+	background: #FFF
+}
+
+table.evenOdd tr:nth-child(odd) {
+	background: #CCC
+}
+</style>
+    </head>
+    <body id="mybody" class="myBody" >
+   
+        <table class="menut" style="width:100%"><tr style="background-color:#134F5C; height: 100px;"><td style="width: 190px" ><img style="width:200; height:200" src="img/dblab.png" /></td>
+                <td style="align-content: center; color: white; font-size: x-large" align="center"> <strong>POLYGRAPH</strong><br/> <label style="font-size: large">(Monitoring)</label></td>
+            </tr>
+            <tr ><td style="background-color: #134F5C; vertical-align: top;height: 720px;">
+                    <table class="menut" >
+                        <tr>
+                            <td style="width: 190px; height: 103px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style="margin-left: 0px;padding-left: 0px" >Demo</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoSettings.jsp" >Settings</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoDesc.jsp" >Description</a></li> 
+
+                                            
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        <tr>
+                            <td style="width: 190px; height: 145px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style=" pointer-events: none;cursor: default;" >Polygraph</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="mont.jsp" >Monitoring</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="app.jsp" >Authoring</a></li> 
+                                             <li><a class="menu" style="margin-left: 35px;" href="desc.jsp" >Description</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="Papers.jsp" >Papers</a></li> 
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                        <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" href="about.jsp" >About us</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                         <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" target="_blank"  href="http://dblab.usc.edu" >http://dblab.usc.edu</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                         
+                        
+                        
+                    </table>
+                 <!-- > Body of Page<-->
+                <td  id="body" style="vertical-align:top; padding-top: 20px; padding-left:50px " align="left">
+             		
+	<br />
+	<table style="margin-left: auto; margin-right: auto;">
+		<tr>
+			<td><strong>Running Application: <%=appName%></strong><br> <br>
+			</td>
+		</tr>
+		<tr>
+			<td><table style="margin: auto;"><tr><td>
+				<div class="shadow" style="padding: 2px; overflow: auto; margin: auto; background-color: #5c6b77;">
+					<table>
+						<tr>
+							<td>
+								<table class="evenOdd" style="margin-left: auto; margin-right: auto; width: 140px; border-collapse: collapse;">
+									<tr>
+										<td style="text-align: left;">Client ID</td>
+									</tr>
+									<tr>
+										<td style="text-align: left;">Read count</td>
+									</tr>
+									<tr>
+										<td style="text-align: left;">Write count</td>
+									</tr>
+									
+									
+								</table>
+							</td>
+							<td style="padding: 0px;"><div><table><tr id="stats"></tr></table></div></td>
+						</tr>
+					</table>
+				</div></td></tr></table>
+			</td>
+		</tr>
+	</table>
+	<br />
+	<table style="margin-left: auto; margin-right: auto;">
+		<tr>
+			<td valign="top" class="shadow" style="padding-bottom: 5px;">
+				<table>
+					<tr>
+						<th style="border-radius: 10px;" width="120px">E/R Name</th>
+						<th style="border-radius: 10px;" width="100px">Anomaly count</th>
+					</tr>
+				</table>
+				<div id="eTable" style="overflow: auto; width: 250px; height: 100px">
+					<table id="ERTable" class="evenOdd" style="border: solid 1px black; border-collapse: collapse;">
+					</table>
+				</div>
+			</td>
+			<td width="100px"></td>
+			<td valign="top" class="shadow" style="padding-bottom: 5px;">
+				<table>
+					<tr>
+						<th style="border-radius: 10px;" width="120px">T Name</th>
+						<th style="border-radius: 10px;" width="100px">Anomaly count</th>
+					</tr>
+				</table>
+				<div id="tTable" style="overflow: auto; width: 250px; height: 100px">
+					<table id="TTable" class="evenOdd" style="border: solid 1px black; border-collapse: collapse;">
+					</table>
+				</div>
+			</td>
+		</tr>
+	</table>               
+               </td>
+            
+            </tr>
+            
+                
+        </table>
+        
+          
+
+
+    </body>
+</html>

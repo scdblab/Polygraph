@@ -1,0 +1,11 @@
+package edu.usc.stalemeter.website;
+
+public class MySQLResponse {
+	public enum MySQLStatus{
+		OK,
+		ERROR
+	}
+	
+	public String msg;
+	public MySQLStatus status;
+}

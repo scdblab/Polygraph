@@ -1,0 +1,74 @@
+<%@page import="java.util.Collection"%>
+<%@page import="java.util.Enumeration"%>
+<%@page import="java.util.HashMap"%>
+<%@page import="edu.usc.polygraph.StatsConsumer"%>
+<%@page import="edu.usc.polygraph.website.StaleLog"%>
+<%@page import="edu.usc.polygraph.website.PolygraphUISettings"%>
+<%@page import="edu.usc.polygraph.LogRecord"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="edu.usc.polygraph.KafkaScripts"%>
+<%@page import="java.util.Collections"%>
+
+
+
+<%
+	if ((session.getAttribute("appNameM") == null) || ((String) session.getAttribute("appNameM") == "")
+			|| (session.getAttribute("kafkaIP") == null) || ((String) session.getAttribute("kafkaIP") == ""))
+			 {
+		request.setAttribute("info", "error");
+		request.setAttribute("errorMSG", "Missing inputs.");
+		request.getRequestDispatcher("index.jsp").forward(request, response);
+	} else {
+
+		String appName = (String) session.getAttribute("appNameM");
+		String kafkaIP = (String) session.getAttribute("kafkaIP");
+		
+		String topic = "STATS_" + appName;
+		StatsConsumer consumerStale = (StatsConsumer) session.getAttribute("_consumerStale");			
+
+		StatsConsumer consumerW = (StatsConsumer) session.getAttribute("_consumerW");
+		if (consumerW == null) {
+			consumerW= new StatsConsumer(appName, appName, 1, kafkaIP);
+			session.setAttribute( "_consumerW", consumerW);
+			
+
+		}
+		if (consumerStale == null) {
+			out.println("ERROR:Consumers missing.");
+			out.flush();
+		} else {
+	
+	
+	
+			boolean first=true;
+			String p1=request.getParameter("first");
+			if (p1!=null && !p1.equalsIgnoreCase("true")){
+				first=false;
+			}
+			
+			int threadCount=3;
+			String t=request.getParameter("tcount");
+			if (t!=null && Integer.parseInt(t)==1){
+				threadCount=1;
+			}
+
+			if (first){
+				consumerStale.setOffet(0);
+				consumerW.setOffet(0);
+			}
+			ArrayList<LogRecord> result=KafkaScripts.getLogs(consumerStale, consumerW,threadCount);
+	
+				for (LogRecord l : result) {
+					//sorted.add(Integer.parseInt(l.getId()));
+					if (consumerStale.getStaleLogs().containsKey(l.getId())) {
+						l.setType('S');
+
+					}
+					
+				}
+				
+
+			out.print(KafkaScripts.ArrayListToJSON2(result, consumerStale.getStaleLogs(), (long)session.getAttribute("startTime")));
+		}
+	}
+%>

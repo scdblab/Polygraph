@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	   <title>ITPOverlay Demo</title>
+       <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/mootools/1.2.5/mootools-yui-compressed.js"></script>
+	   <script src="itpoverlay.js" type="text/javascript"></script>
+	   <link href="style.css" type="text/css" rel="stylesheet" />
+	   
+	   <style>
+	    #box {
+	        width: 800px;
+	        height: 200px;
+	        position:relative;
+	        border: thin solid black;
+	    }
+	    </style>
+	    
+	    <script>
+	    window.addEvent('domready', function(){ 
+	    	
+	          $("click_me").addEvent('click', 
+	             function(e){ 
+	        	  var overlay = new ItpOverlay("box");
+	        	  overlay.show();
+	               setTimeout ( 
+	                  function(){
+	                	  overlay.hide();
+	                  }
+	               , 2000 );
+	             }
+	          );
+	
+	          $("click_me2").addEvent('click', 
+	                  function(e){ 
+	        	        var overlay = new ItpOverlay();
+	        	        overlay.show("body");
+	                    setTimeout ( 
+	                       function(){
+	                    	   overlay.hide("body");
+	                       }
+	                    , 2000 );
+	                  }
+	          );
+
+	          $("click_me3").addEvent('click', 
+                      function(e){ 
+	      	            var overlay = new ItpOverlay();
+                        //make the ajax call, replace text
+                        var req = new Request.HTML({
+                            method: 'get',
+                            url: 'data.php',
+                            onRequest: function() { overlay.show("body"); },
+                            update: $('content'),
+                            onComplete: function(response) { overlay.hide("body"); }
+                        }).send();
+                        
+                      }
+              );
+	    });
+	     </script>
+	     
+	</head>
+
+    <body id="body">
+
+		<p><a href="javascript: void(0);" id="click_me" >Click here</a> to overlay the box.</p>
+		<div id="box">
+		    When you click the link above, the script will overlay this box. 
+		</div> 
+		
+		<p><a href="javascript: void(0);" id="click_me2" >Click here</a> to overlay the page.</p>
+		<p><a href="javascript: void(0);" id="click_me3" >Click here</a> to make AJAX request.</p>
+		<div id="content">Waiting for AJAX request....</div>
+    </body>
+</html>

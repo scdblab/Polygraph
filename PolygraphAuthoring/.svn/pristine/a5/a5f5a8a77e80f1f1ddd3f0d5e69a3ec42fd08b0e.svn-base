@@ -1,0 +1,42 @@
+@CHARSET "UTF-8";
+
+.logTable{
+	border-style: outset;
+	box-shadow: 5px 5px 10px gray;
+	margin: auto;
+	border-radius: 10px;
+	border-collapse: separate;
+	border-spacing: 0px;
+}
+
+.logHeader{
+	text-align: center;
+	border: 0;
+	font-size: 18px;
+}
+
+.eName{
+	border-top: 1px solid black;
+	padding: 0px 4px;
+	font-size: 14px;
+}
+
+.expected{
+	border-top: 1px solid black;
+	border-left: 1px solid black;
+	padding: 0px 4px;
+	font-size: 14px;
+}
+
+.pName{
+	border-top: 1px solid black;
+	padding: 0px 4px;
+	font-size: 12px;
+}
+
+.props{
+	border-top: 1px solid black;
+	border-left: 1px solid black;	
+	padding: 0px 4px;
+	font-size: 12px;
+}

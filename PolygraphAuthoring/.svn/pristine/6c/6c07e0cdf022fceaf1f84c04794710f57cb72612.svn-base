@@ -1,0 +1,28 @@
+
+<%@ page import="demo.*"%>
+<%@ page import="java.sql.*"%>
+<%@ page import="java.sql.*"%>
+<%
+	if ((request.getParameter("id") == null) ) {
+		out.print("Get Chart is Missing session ID");
+	} else {
+		
+		String id = request.getParameter("id");
+		DemoMain demo=DemoMain.getDemo(id);
+		if (demo==null){
+			out.print("#dError: Session ID not exist:"+id);
+		}
+		else{
+		String result= demo.getChartDataStr(true);
+		if (demo.fileThread==null){
+			result=result+";"+0+";"+0+";"+demo.getElapsedTimeStr();;
+		}
+		else{
+			result=result+";"+demo.fileThread.moneyLost+";"+demo.fileThread.numAnomalies+";"+demo.getElapsedTimeStr();;
+		}
+			out.print(result);
+		}
+		
+		
+	}
+%>

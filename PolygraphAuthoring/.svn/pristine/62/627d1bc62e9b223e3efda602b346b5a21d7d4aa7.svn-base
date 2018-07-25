@@ -1,0 +1,212 @@
+<%-- 
+    Document   : index
+    Created on : Aug 22, 2017, 2:06:23 PM
+    Author     : yaz
+--%>
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+               <link rel="stylesheet" href="css/style.css" type="text/css">
+           <script src="js/common.js" type="text/javascript"></script>
+           <link href="css/vis.css" rel="stylesheet" type="text/css" />
+           
+    	 <script src="js/vis2.js"></script>
+       <script src="js/itpoverlay.js" type="text/javascript"></script>
+	<link href="js/style.css" type="text/css" rel="stylesheet" />
+	                  <link rel="stylesheet" href="css/style2.css" type="text/css">
+	
+       <script type="text/javascript" src="javascript.js"></script>
+        
+  		<script src="moment.js"></script>
+		<script src="Chart.js"></script>
+		<script src="utils.js"></script>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+         
+        <title>Polygraph Demo</title>
+		
+    <style type="text/css">
+   
+
+    </style>
+  
+    <%@ page import="demo.*"%>
+    <%@ page import="java.sql.*"%>
+    
+    <% String ssId=session.getId();
+  		  //ssId="DEMO_2";
+  		  ssId="DEMO-"+ssId;
+  		  session.setAttribute("ssId", ssId);
+       
+    %>
+    <script type="text/javascript">sId="<%=ssId%>";</script>
+   <script type="text/javascript">
+
+
+
+</script>
+    </head>
+    <body id="body1" class= "myBody"onload="load(false);">
+   
+       
+   
+        <table class="menut" style="width:100%"><tr style="background-color:#134F5C; height: 50px;"><td style="width: 190px" ><img style="width:150px; height:50px" src="img/dblab.png" /></td>
+                <td style="align-content: center; color: white; font-size: x-large" align="center"> <strong>POLYGRAPH</strong><br/> <label style="font-size: large">(Demonstration)</label></td>
+            </tr>
+            <tr ><td style="background-color: #134F5C; vertical-align: top;height: 720px;">
+                    <table class="menut" >
+                        <tr>
+                            <td style="width: 190px; height: 103px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style="margin-left: 0px;padding-left: 0px" >Demo</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoSettings.jsp" >Settings</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoDesc.jsp" >Description</a></li> 
+
+                                            
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        <tr>
+                            <td style="width: 190px; height: 145px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style=" pointer-events: none;cursor: default;" >Polygraph</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="mont.jsp" >Monitoring</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="Overview.jsp" >Overview</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="Papers.jsp" >Papers</a></li> 
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                        <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" href="about.jsp" >About us</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                         <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" target="_blank"  href="http://dblab.usc.edu" >http://dblab.usc.edu</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                         
+                        
+                        
+                    </table>
+                    
+                 <!-- > Body of Page<-->
+                <td  id= "bb" style="vertical-align:top;" align="center">
+                    <table>
+                   
+                        <tr>
+                            <td  style="padding-top:30px">
+                                <table>
+                                    <tr> <td class="stats">Elapsed Time:</td> <td><label id="etime" class="stats"></label></td></tr>
+                                </table> 
+                            </td> 
+                            
+                                
+                            
+                               <td class="MYTestP" style="vertical-align: bottom;" align="center">
+                                 
+                                 <a class="ah MYTestP"><img  class="MYTestP" style="width:30px; height:30px" src="img/q.png" onclick="showQ('q1')"></a>
+								<div class="divh MYTestC" id="q1" style="width: 400px;left:-410px;top:-10px; vertical-align: top" align="left">
+								This experiment uses a single server to host all components of Polygraph and therefore 
+								we limit the number of threads to 3.  To run with a larger number of threads, 
+								a multi-node deployment of Polygraph is required as detailed in our
+								 <a target="_blank" href="http://dblab.usc.edu/Users/papers/PolygraphMay2017.pdf">technical report</a>
+								
+								
+								</div>
+                                
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                              <td>
+                                  <table>
+                                      <tr> <td class="stats" style="padding-top: 15px" colspan="2"> Polygraph detected</td></tr>
+                                      <tr ><td class="stats" style="padding-left: 35px">Lost Money:</td> <td><label class="stats" id="lm">$0</label></td></tr>
+                                      <tr> <td class="stats" style="padding-left: 35px">Anomalies:</td> <td><label class="stats" id="anomalies">0</label></td></tr>
+                                  </table>
+                            </td> 
+                            <td class="MYTestP" style="vertical-align: bottom;" align="center">
+                                 
+                                 <a class="ah"><img class="MYTestP" style="width:30px; height:30px" src="img/q.png"></a>
+								<div id="q2" class="divh MYTestC" style="width: 400px;left:-410px;top:40px; vertical-align: top" align="left">We report the amount of lost money and anomalies as detected by Polygraph. We show the percentage difference between the current and last reported numbers.</div>
+                                
+                            </td>
+                        </tr>
+                        <tr><td style="padding-left: 40px;padding-top:20px; font-size:18px; font-weight: normal;"> Lost Money
+                        
+                        <span  style="padding-left: 200px;">
+			 	
+			  <button id="zoomOut" class="myButton" style=" width:30px;padding:6px 2px 2px 2px; border-radius: 50%; color:white;font-weight:bold;font-size:18px"><img src="img/minus.png" style="width: 20px; height: 20px" /></button>
+			<button id="zoomIn" class="myButton" style="width:30px;padding:6px 2px 2px 2px; border-radius: 50%; color:white;font-weight:bold;font-size:18px" ><img src="img/plus.png" style="width: 20px; height: 20px" /></button>
+			
+					
+					 
+					
+				</span>
+                        
+                        
+                        
+                        
+                        
+                        </td></tr>
+                       
+                       
+                        <tr>
+                            <td id="cc" style="padding-top: 0px">
+                            <div id="visualization"  style="border:none !important;" >
+                            
+                            </div>
+								
+                               <script>
+              // line chart data
+              
+</script>
+                                
+                            </td> 
+                            
+                              <td class="MYTestP" style="vertical-align: bottom;" align="center">
+                                 
+                                 <a class="ah MYTestP"><img  class="MYTestP" style="width:30px; height:30px" src="img/q.png" onclick="showQ('q3')"></a>
+								<div class="divh MYTestC" id="q3" style="width: 400px;left:-410px;bottom:0px; vertical-align: top" align="left">
+								We show the amount of money lost as a function of elapsed time. Elapsed time is formatted as HH-MM-SS. A user can zoom-in, zoom-out, scroll right or left 
+								to view a specific point in time.
+								
+								</div>
+                                
+                            </td>
+                        </tr>
+                 <tr><td align="center" style=" font-size:18px; font-weight: normal;">Elapsed Time</td></tr>
+                        
+                         <tr>
+                          
+                              <td style="padding-top: 20px" colspan="2" align="center"><input style="" class="myButton"  id= "res" type="submit" value="Restart" onclick="restart();" /></td>  
+                             
+                            
+                               
+                        </tr>
+                       
+                    </table> 
+                    
+                    
+                    
+                </td>
+            
+            </tr>
+            
+                
+        </table>
+        <div id="debug"></div>
+        <script type="text/javascript"></script>
+          
+
+
+    </body>
+</html>

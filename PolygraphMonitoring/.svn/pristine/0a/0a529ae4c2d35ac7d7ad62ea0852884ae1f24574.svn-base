@@ -1,0 +1,26 @@
+<%@ page import="edu.usc.stalemeter.website.MySQLResponse.MySQLStatus"%>
+<%@ page import="edu.usc.stalemeter.website.MySQLResponse"%>
+<%@ page import="java.sql.*"%>
+<%@ page import="edu.usc.stalemeter.website.MySQL"%>
+<%
+	String username = request.getParameter("username");
+	String password = request.getParameter("password");
+	if (username == null || username == "" || password == null || password == "") {
+		request.setAttribute("info", "error");
+		request.setAttribute("tableToShow", "login");
+		request.setAttribute("errorMSG", "Missing Username or Password");
+		request.getRequestDispatcher("index.jsp").forward(request, response);
+	} else {
+		MySQLResponse id = MySQL.getUserID(username, password);
+		if (id.status == MySQLStatus.ERROR) {
+			request.setAttribute("info", "error");
+			request.setAttribute("tableToShow", "login");
+			request.setAttribute("errorMSG", id.msg);
+			request.getRequestDispatcher("index.jsp").forward(request, response);
+		} else if (id.status == MySQLStatus.OK) {
+			session.setAttribute("username", username);
+			session.setAttribute("userid", Integer.valueOf(id.msg));
+			response.sendRedirect("mainPage.jsp");
+		}
+	}
+%>

@@ -1,0 +1,31 @@
+/*
+* Place this code segment before the start of the transaction.
+*/
+//********************************************************************//
+long startTime=System.nanoTime();
+//********************************************************************//
+
+/*
+* Place this code segment after commit of the transaction.
+* Set the value of tid to uniquely identify a transaction.
+* Set the number of partitions in numPartitions_Demo_1 constant.
+* Create topic Demo_1 with numPartitions_Demo_1*2 partitions
+*/
+//********************************************************************//
+ArrayList<Entity> transEntities= new ArrayList<Entity>();
+String Account_key_0 = accountID;
+Property[] props_Account_1 = new Property[2];
+props_Account_1[0] = new Property("Balance", String.valueOf(bal1), 'R');
+props_Account_1[1] = new Property("Balance", String.valueOf(bal2), 'N');
+Entity e_Account_2 = new Entity(Account_key_0, "Account", props_Account_1);
+transEntities.add(e_Account_2);
+
+long endTime=System.nanoTime();
+String logRecord = PolygraphHelper.getLogRecordString('Z', "Withdraw", String.valueOf(tid), startTime, endTime, transEntities);
+int[] keys_4 = new int[1];
+keys_4[0] = PolygraphHelper.convertStringToInt(accountID);
+int key_3 = PolygraphHelper.getPartitionKey(keys_4);
+int partitionEnd = (key_3 % PolygraphHelper.numPartitions_Demo_1) + PolygraphHelper.numPartitions_Demo_1;
+PolygraphHelper.kafkaProducer.send(new ProducerRecord<String, String>("Demo_1",partitionEnd, String.valueOf(tid), logRecord));
+//********************************************************************//
+

@@ -1,0 +1,285 @@
+ <%@page import="edu.usc.polygraph.StatsConsumer"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="edu.usc.polygraph.website.MySQLResponse.MySQLStatus"%>
+<%@page import="edu.usc.polygraph.website.MySQLResponse"%>
+<%@page import="edu.usc.polygraph.website.MySQL"%>
+<%@page import="edu.usc.polygraph.KafkaScripts"%>
+<%@page import="edu.usc.polygraph.website.AppElement"%>
+<%@page import="edu.usc.polygraph.website.PolygraphUISettings"%>
+
+<%@ page import="java.sql.*"%>
+    <%@ page import="demo.*"%>
+<%
+	//if (       (request.getParameter("appName") == null)
+	//		|| (request.getParameter("appName") == "")
+	//		|| (request.getParameter("kafkaIP") == null)
+	//		|| (request.getParameter("kafkaIP") == "")
+	//		|| (request.getParameter("zookeeperIP") == null)
+	//		|| (request.getParameter("zookeeperIP") == "")) {
+	//	request.setAttribute("info", "error");
+	//	request.setAttribute("errorMSG", "Missing inputs.");
+	//	request.getRequestDispatcher("visual.jsp").forward(request, response);
+	//} else {
+		String appName = (String)session.getAttribute("ssId");
+		
+		String kafka = PolygraphUISettings.KAFKA_HOST;
+		String zookeeper = PolygraphUISettings.ZOOKEEPER_HOST;
+		boolean doneLoading=false;
+		if(appName!=null){
+		session.setAttribute("appNameM", appName);
+		}
+		session.setAttribute("kafkaIP", kafka);
+		session.setAttribute("zookeeperIP", zookeeper);
+		String topic=null;
+		if(appName!=null){
+			topic = "STATS_" + appName;
+		}
+	
+		if( appName!=null &&  KafkaScripts.isTopicExist(topic, zookeeper)){
+			if(session.getAttribute("_consumerStale") ==null){
+			
+			StatsConsumer consumerStale = new StatsConsumer(topic, topic, 1, kafka);
+			session.setAttribute("_consumerStale", consumerStale);
+			}
+			if(session.getAttribute("_consumerStats") ==null){
+			StatsConsumer consumerStats = new StatsConsumer(topic, topic, 0, kafka);
+			session.setAttribute("_consumerStats", consumerStats);
+			}
+			doneLoading=true;
+			
+		} 
+	
+%>
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+       	<script type="text/javascript">var done="<%=doneLoading%>";
+    if (done==="false"){
+    	alert("Session or Kafka topic not exist. Please visit Demo main page");
+    }
+    
+    
+    </script>
+       <script type="text/javascript" src="javascript.js"></script>
+              <script src="js/itpoverlay.js" type="text/javascript"></script>
+       
+        <script src="js/vis2.js"></script>
+        
+  		<script src="moment.js"></script>
+		<script src="Chart.js"></script>
+		<script src="utils.js"></script>
+		
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+         
+        <title>Monitoring</title>
+		
+    <style type="text/css">
+
+
+
+
+.menu a:hover { color: white; }
+
+    </style>
+ 
+ <script src="js/common.js" type="text/javascript"></script>
+<script src="js/visualization.js" type="text/javascript"></script>
+<link rel="stylesheet" href="css/style.css" type="text/css">
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="js/vis2.js"></script>
+	<script src="moment.js"></script>
+<link href="css/vis.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="css/logInfo.css" type="text/css">
+<style>
+.selected {
+	background-color: #97a6ff;
+	color: #ffffff;
+}
+
+table.evenOdd tr:nth-child(even) {
+	background: #FFF
+}
+
+table.evenOdd tr:nth-child(odd) {
+	background: #CCC
+}
+
+.Mitem {
+	height: 20px;
+}
+
+.vis-item.Read {
+	background-color: #a5ffa9;
+	border-color: #4caf50;
+	
+}
+
+
+
+.vis-item.vis-selected.Read {
+	/* custom colors for selected orange items */
+	background-color: #31e638;
+	border-color: #37793a;
+}
+
+.vis-item.Write {
+height:25px;
+
+	background-color: #a5ffa9;
+	border-color: #4caf50;
+}
+.vis-item.Write:hover {
+			background-color: #31e638;
+	border-color: #37793a;
+	
+	
+}
+.vis-item.vis-selected.Write {
+	/* custom colors for selected orange items */
+	background-color: #97a6ff;
+	border-color: #28378a;
+}
+
+.vis-item.Stale {
+	background-color: #ffc0c0;
+	border-color: #ff0000;
+}
+
+.vis-item.Stale:hover {
+	background-color: #f56262;
+	border-color: #8a0000;
+}
+
+.vis-item.vis-selected.Stale {
+	/* custom colors for selected orange items */
+	background-color: #f56262;
+	border-color: #8a0000;
+}
+
+.Read {
+	height:10px;
+
+	background-color: #a5ffa9;
+	border-color: #4caf50;
+}
+
+.Write {
+	height:25px;
+	background-color: #a5ffa9;
+	border-color: #4caf50;
+	align-content:center;
+}
+
+.Stale {
+	height:25px;
+
+	background-color: #ffc0c0;
+	border-color: #ff0000;
+}
+</style>
+
+ 
+ 
+     </head>
+    <body id="body1" class="myBody"  >
+   
+        <table class="menut" style="width:100%"><tr style="background-color:#134F5C; height: 100px;"><td style="width: 190px" ><img style="width:200; height:200" src="img/dblab.png" /></td>
+                <td style="align-content: center; color: white; font-size: x-large" align="center"> <strong>POLYGRAPH</strong><br/> <label class="menu">(Monitoring)</label></td>
+            </tr>
+            <tr ><td style="background-color: #134F5C; vertical-align: top;height: 720px;">
+                    <table class="menut" >
+                        <tr>
+                            <td style="width: 190px; height: 103px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style="margin-left: 0px;padding-left: 0px" >Demo</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoSettings.jsp" >Settings</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="DemoDesc.jsp" >Description</a></li> 
+
+                                            
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        <tr>
+                            <td style="width: 190px; height: 145px">  <ul class="menu" >
+                                    <li><a class="menu" href="index.jsp" style=" pointer-events: none;cursor: default;" >Polygraph</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="mont.jsp" >Monitoring</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="app.jsp" >Authoring</a></li> 
+                                             <li><a class="menu" style="margin-left: 35px;" href="desc.jsp" >Description</a></li> 
+                                            <li><a class="menu" style="margin-left: 35px;" href="Papers.jsp" >Papers</a></li> 
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                        <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" href="about.jsp" >About us</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                        
+                         <tr>
+                            <td style="width: 190px; height: 61px">  <ul class="menu" >
+                                            <li><a class="menu" target="_blank"  href="http://dblab.usc.edu" >http://dblab.usc.edu</a></li> 
+                                          
+                                         </ul>
+                                    
+                                    </td> </tr>
+                         
+                        
+                        
+                    </table>
+                    
+                 <!-- > Body of Page<-->
+                <td  id="body" style="vertical-align:top; padding-top: 20px; padding-left:50px " align="left">
+                <script> </script>
+                <table style="margin: auto;">
+                
+                
+		<tr>
+			
+			<td style="width: 10px"></td>
+			<td valign="top" style="">
+				<div  style="height:30px; padding-top: 2px; padding-left: 30px;" align="center">
+					<button id="zoomIn"><span class="glyphicon glyphicon-zoom-in"></span> Zoom in</button> 
+					<button id="zoomOut"><span class="glyphicon glyphicon-zoom-out"></span> Zoom out</button>
+					 
+					
+				</div> <br />
+				<div id="visualization"  style="height: 500px;border:none">
+				
+				</div>
+				<script type="text/javascript">
+	window.onload = function () {
+		//over();
+		// attach events to the navigation buttons
+		getMoreLogs(true);
+		setInterval(function (){getMoreLogs(false)}, 20000);
+		document.getElementById('zoomIn').onclick = function() {zoom(-0.2);};
+		document.getElementById('zoomOut').onclick = function() {zoom(0.2);};
+	//	document.getElementById('moveLeft').onclick = function() {move(0.2);};
+	//	document.getElementById('moveRight').onclick = function() {move(-0.2);};
+	}
+	</script>
+				<div id="logsInfoDiv" align="center" style="width: 1000px; height: 200px; overflow: auto;font-size:18px; font-weight: normal;font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif">
+				 Elapsed Time
+				</div>
+			</td>
+		</tr>
+	</table>
+                   
+               </td>
+            
+            </tr>
+            
+                
+        </table>
+        
+          
+
+
+    </body>
+</html>

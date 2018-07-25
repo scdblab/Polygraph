@@ -1,0 +1,65 @@
+<%@page import="java.util.Enumeration"%>
+<%@page import="java.util.HashMap"%>
+<%@page import="edu.usc.stalemeter.StatsConsumer"%>
+<%@page import="edu.usc.stalemeter.website.StaleLog"%>
+<%@page import="edu.usc.stalemeter.website.PolygraphUISettings"%>
+<%@page import="edu.usc.stalemeter.LogRecord"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="edu.usc.stalemeter.KafkaScripts"%>
+<%
+	if ((session.getAttribute("userid") == null) || (session.getAttribute("userid") == "")) {
+		out.print("You are not logged in<br/><a href=\"index.jsp\">Please Login</a>");
+	} else {
+		long rO = Long.parseLong(request.getParameter("rO"));
+		long wO = Long.parseLong(request.getParameter("wO"));
+		long count = Integer.parseInt(request.getParameter("count"));
+		String appName = request.getParameter("appName");
+		String key = request.getParameter("key");
+		String type = request.getParameter("type");
+		Enumeration<String> it = request.getParameterNames();
+		while(it.hasMoreElements()){
+			String name = it.nextElement();
+			System.out.println(String.format("%s = %s", name, request.getParameter(name)));
+		}
+		int index = Integer.parseInt(request.getParameter("index"));
+		LogRecord staleLogRecord = (LogRecord) session.getAttribute(appName + "_currentStale");
+		//StaleLog staleStaleLog = (StaleLog) session.getAttribute(appName + "_currentStaleLog");
+		StatsConsumer consumerStale = (StatsConsumer) session.getAttribute("MR1");
+		HashMap<String, ArrayList<StaleLog>> hash = null;
+		if (type.equals("e")) {
+			hash = consumerStale.eStaleLog;			
+		} else if (type.equals("t")) {
+			hash = consumerStale.tStaleLog;
+		}
+		StaleLog staleStaleLog = hash.get(key).get(index);
+		System.out.println(String.format("consumerStale.eStaleLog.get(%s).get(%d).offset = %d", key, index, staleStaleLog.staleOffset));
+		//if(staleStaleLog == null){System.out.println("staleStaleLog == null");}else{System.out.println("staleStaleLog != null");}
+		System.out.println("rO = " + rO + " ... wO = " + wO + " ... count = " + count + " ,,, " + appName);
+		rO -= count * PolygraphUISettings.numOfLogsBeforeLast;
+		wO -= count * PolygraphUISettings.numOfLogsBeforeLast;
+		System.out.println("rO = " + rO + " ... wO = " + wO + " ... count = " + count);
+		ArrayList<LogRecord> result = null;
+		if (count == 0) {
+			result = KafkaScripts.runTest(staleStaleLog);
+			for (LogRecord r : result) {
+				if (staleStaleLog.tid.equals(r.getId())) {
+					staleLogRecord = r;
+					break;
+				}
+			}
+			session.setAttribute(appName + "_currentStale", staleLogRecord);
+		} else {
+			result = KafkaScripts.getMore(rO, wO, staleLogRecord);
+		}
+		//System.out.println("(result == null): " + (result == null) + " .. (staleLogRecord == null): "+(staleLogRecord == null));
+		KafkaScripts.removeUnwanted(result, staleLogRecord);
+		for (StaleLog s : hash.get(key)) {
+			for (LogRecord l : result) {
+				if (s.tid.equals(l.getId())) {
+					l.setType('S');
+				}
+			}
+		}
+		out.print(KafkaScripts.ArrayListToJSON(result, hash.get(key)));
+	}
+%>

@@ -1,0 +1,28 @@
+package edu.usc.stalemeter.codegenerator;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import org.json.JSONObject;
+
+public class PObject {
+	public JSONObject json;
+	public HashMap<Integer, PObject> pks;
+	public HashMap<String, PObject> props;
+	public HashMap<String, String> info;
+	public int id;
+	public String type;
+	
+	public PObject(int id, String type){
+		pks = new HashMap<Integer, PObject>();
+		props = new HashMap<String, PObject>();
+		info = new HashMap<String, String>();
+		this.id = id;
+		this.type = type;
+	}
+	
+	public PObject(int id, String type, JSONObject json){
+		this(id, type);
+		this.json = json;
+	}
+}

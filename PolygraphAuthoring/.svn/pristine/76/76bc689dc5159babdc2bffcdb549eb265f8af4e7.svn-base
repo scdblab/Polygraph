@@ -1,0 +1,60 @@
+<%@ page import="demo.*"%>
+<%@ page import="java.sql.*"%>
+<%@ page import="java.sql.*"%>
+<%@page import="edu.usc.polygraph.StatsConsumer"%>
+
+<%
+	if ((request.getParameter("id") == null) ) {
+		out.print("Load Threads Missing session ID");
+	} else {
+		
+		String id = request.getParameter("id");
+		boolean single=Boolean.parseBoolean(request.getParameter("single"));
+		int threadCount=1;
+		if (!single){
+			threadCount=DemoMain.DEFAULT_NUM_THREADS;
+		}
+		boolean result=false;
+		DemoMain demo= DemoMain.getDemo(id);
+		if (demo!=null){
+		if (threadCount!=demo.accThreads.size()){
+		 result=true;
+		 DemoMain.close(id);
+			
+
+			StatsConsumer c1=(StatsConsumer)session.getAttribute("_consumerStale");
+			if (c1!=null){
+				c1.close();
+				
+			}
+			c1=(StatsConsumer)session.getAttribute("_consumerW");
+			if (c1!=null){
+				c1.close();
+				
+			}
+			session.setAttribute("_consumerStale",null);		
+			session.setAttribute("_consumerW",null);			
+
+
+		    demo=DemoMain.run(id, threadCount, 0);
+		  	session.setAttribute("startTime",demo.startTimeNano );
+		  	out.print("Done! Demo has been restarted ");
+
+		}
+		
+		else{
+			out.print("Done!");
+		}
+		
+		}
+		else{ //demo is not
+			out.print("Session not exist!");
+		}
+		
+		   
+		
+		
+		
+	}
+%>
+

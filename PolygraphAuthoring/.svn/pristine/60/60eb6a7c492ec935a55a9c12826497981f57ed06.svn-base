@@ -1,0 +1,53 @@
+<%@page import="edu.usc.polygraph.StatsConsumer"%>
+<%@ page import="demo.*"%>
+<%@ page import="java.sql.*"%>
+<%@ page import="java.sql.*"%>
+<%
+	if ((request.getParameter("id") == null) ) {
+		out.print("Load is Missing session ID");
+	} else {
+		int threadCount= DemoMain.DEFAULT_NUM_THREADS;
+		String id = request.getParameter("id");
+		String restart=request.getParameter("restart");
+		if (restart.equals("true")){
+			threadCount=DemoMain.close(id);
+		
+
+			StatsConsumer c1=(StatsConsumer)session.getAttribute("_consumerStale");
+			if (c1!=null){
+				c1.close();
+				
+			}
+			c1=(StatsConsumer)session.getAttribute("_consumerW");
+			if (c1!=null){
+				c1.close();
+				
+			}
+			session.setAttribute("_consumerStale",null);		
+			session.setAttribute("_consumerW",null);			
+
+
+			
+			if (threadCount==0)
+				threadCount= DemoMain.DEFAULT_NUM_THREADS;
+		}
+		 DemoMain demo=DemoMain.run(id, threadCount, 0);
+ 		  session.setAttribute("startTime",demo.startTimeNano );
+
+		   if (demo.ready==false)  {
+			   String result= demo.getChartDataStr(false);
+				result=result+";"+0+";"+0+";"+demo.getElapsedTimeStr();
+				out.print(result);
+
+		   }
+		   else{
+		String result= demo.getChartDataStr(false);
+		result=result+";"+demo.fileThread.moneyLost+";"+demo.fileThread.numAnomalies+";"+demo.getElapsedTimeStr();
+		out.print(result);
+		   }
+		
+		
+		
+	}
+%>
+
