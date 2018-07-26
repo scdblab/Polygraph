@@ -12,13 +12,13 @@ Yazeed Alabdulkarim, Marwan Almaymoni, and Shahram Ghandeharizadeh
 
 * Input is log records stored in Kafka or a directory of files.
 
-* Consists of 3 sub-projects:  Authoring, Validation, and Monitoring.  
+* Consists of 3 sub-projects:  [Authoring](#polygraph-authoring), [Validation](#polygraph-validation), and [Monitoring](#polygraph-monitoring).   
 
 ### Overview
 
 Polygraph is data store agnostic and produces no false positives when quantifying the number of anomalies produced by an application and all its components.  The software and hardware limitations and design choices that produce anomalies are categorized into isolation, linearizability, and atomicity violation of transaction properties.  See [database lab technical report 2017-02](http://dblab.usc.edu/Users/papers/PolygraphMay2017.pdf) for details.
 
-Polygraph consists of three distinct phases:  Authoring, Validation, and Monitoring.  During the authoring phase, the experimentalist employs Polygraph's visualization tool to identify entities and relationship sets of an application, and those actions that constitute each transaction and their referenced entity/relationship sets. An action may insert or delete one or more entities/relationships, and/or read or update one or more attribute values of an entity/relationship. For example, the payment transaction of the TPC-C benchmark reads and updates a customer entity.
+Polygraph consists of three distinct phases:  [Authoring](#polygraph-authoring), [Validation](#polygraph-validation), and [Monitoring](#polygraph-monitoring).  During the authoring phase, the experimentalist employs Polygraph's visualization tool to identify entities and relationship sets of an application, and those actions that constitute each transaction and their referenced entity/relationship sets. An action may insert or delete one or more entities/relationships, and/or read or update one or more attribute values of an entity/relationship. For example, the payment transaction of the TPC-C benchmark reads and updates a customer entity.
 
 Authoring produces the following three outputs.  First, for each transaction, Polygraph generates a transaction specific code snippet to be embedded in each transaction.  These snippets generate a log record for each executed transaction.  They push log records to a distributed framework for processing by a cluster of Polygraph servers. Second, it generates a configuration file for Polygraph servers, customizing it to process the log records.  Third, it identifies how the log records should be partitioned for parallel processing, including both Kafka topics and the partitioning attributes of the log records.
 
@@ -28,8 +28,8 @@ During the monitoring phase, the experimentalist uses Polygraph's monitoring too
 
 Below, we provide a description of how to deploy Authoring, Validation, and Monitoring components.
 
-#### Polygraph Authoring
-
+ ### Polygraph Authoring
+ 
 Polygraph Authoring generates code snippets to extend transactions to create and publish log records. It currently supports Java. 
 
 **Getting Started**
@@ -72,7 +72,7 @@ Polygraph Authoring generates code snippets to extend transactions to create and
 
 15. Include the source files under "common" folder with the generated code snippets
 
-#### Polygraph Validation
+ ### Polygraph Validation
 
  Polygraph Validation component processes log records and has the following configuration parameters:
 
@@ -180,7 +180,7 @@ Polygraph Authoring generates code snippets to extend transactions to create and
 
      -numvalidators 1 -app tpcc -printfreq 1000 -buffer 5000 -numpartitions 1 -numclients 1 -clientid 0 -kafkahosts 127.0.0.1:9298 -     zookhosts 127.0.0.1:2128 -er erFilePath -kafka true
 
-#### Polygraph Monitoring
+ ### Polygraph Monitoring
 
 Polygraph Monitoring visualizes anomalous transactions. 
 
