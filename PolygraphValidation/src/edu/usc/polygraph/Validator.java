@@ -1,13 +1,9 @@
 package edu.usc.polygraph;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -47,7 +43,6 @@ import edu.usc.polygraph.initial_data.YCSBLoader;
 import edu.usc.polygraph.snapshot.Snapshot;
 import edu.usc.polygraph.snapshot.SnapshotInfo;
 import edu.usc.polygraph.snapshot.SnapshotResult;
-import edu.usc.polygraph.treemap.IntegerTreeType;
 import edu.usc.polygraph.treemap.TreeType;
 
 public class Validator implements Callable<Integer> {
@@ -78,7 +73,7 @@ public class Validator implements Callable<Integer> {
 	public static Database database;
 	public long totalReadLogsCount = 0;
 	public int readRoundRobin = 0;
-	private static volatile boolean initFiles = false;
+//	private static volatile boolean initFiles = false;
 	public int totalStaleCount = 0;
 
 	public static int numToDivideBy = 10000;
@@ -521,7 +516,7 @@ public class Validator implements Callable<Integer> {
 				ValidationParams.onlineRunning = Boolean.parseBoolean(args[i + 1]);
 
 			}
-			
+
 			else if (args[i].equals(ValidationParams.FRESHNESS_PROP)) {
 				ValidationParams.COMPUTE_FRESHNESS = Boolean.parseBoolean(args[i + 1]);
 
@@ -1001,7 +996,7 @@ public class Validator implements Callable<Integer> {
 
 	}
 
-	private boolean debug_check(LinkedList<LogRecord> intervals, String string) {
+	public boolean debug_check(LinkedList<LogRecord> intervals, String string) {
 		for (LogRecord log : intervals) {
 			if (log.getId().equals(string))
 				return true;
@@ -1599,7 +1594,21 @@ public class Validator implements Callable<Integer> {
 			checkFirstRead(vd, record, finalSS);
 		}
 		do {
+            int preSize = participatingEntities.size();
+            if (!willBeShrinked2.isEmpty()) {
+                getOverlapingIntervales(finalSS, vd, record, finalSS.endTime, record.getEndTime(), willBeShrinked2,
+                        intervals);
 
+                willBeShrinked.addAll(willBeShrinked2);
+                for (LogRecord wbs2Log : willBeShrinked2) {
+                    getParticipatingEntities(finalSS, participatingEntities, wbs2Log);
+                }
+                willBeShrinked2.clear();
+
+            }
+            for (int i = start; i < intervals.size(); i++) {
+                getParticipatingEntities(finalSS, participatingEntities, intervals.get(i));
+            }
 			if (!willBeShrinked2.isEmpty()) {
 				getOverlapingIntervales(finalSS, vd, record, finalSS.endTime, record.getEndTime(), willBeShrinked2,
 						intervals);
@@ -2527,12 +2536,14 @@ public class Validator implements Callable<Integer> {
 				if (ValidationParams.PRINT_EXPECTED) {
 					for (Entity e : record.getEntities()) {
 						for (Property p : e.getProperties()) {
-							// for (String key : values.keySet()) {
-							String key = p.getProprtyKey(e);
-							if (values.get(key) != null)
-								System.out.println(key + ": Log Value (" + p.getValue() + ") "
-										+ (p.getValue().equals(values.get(key)) ? "==" : "!=") + " Expected ("
-										+ values.get(key) + ")");
+							if (p.getType() == ValidationParams.VALUE_READ) {
+								// for (String key : values.keySet()) {
+								String key = p.getProprtyKey(e);
+								if (values.get(key) != null)
+									System.out.println(key + ": Log Value (" + p.getValue() + ") "
+											+ (p.getValue().equals(values.get(key)) ? "==" : "!=") + " Expected ("
+											+ values.get(key) + ")");
+							}
 						}
 					}
 				}
@@ -3678,12 +3689,14 @@ public class Validator implements Callable<Integer> {
 					HashMap<String, String> values = expectedValues.get(s);
 					for (Entity e : record.getEntities()) {
 						for (Property p : e.getProperties()) {
-							for (String key : values.keySet()) {
-								// String key = p.getProprtyKey(e);
-								if (values.get(key) != null)
-									System.out.println(key + ": Log Value (" + p.getValue() + ") "
-											+ (p.getValue().equals(values.get(key)) ? "==" : "!=") + " Expected ("
-											+ values.get(key) + ")");
+							if (p.getType() == ValidationParams.VALUE_READ) {
+								for (String key : values.keySet()) {
+									// String key = p.getProprtyKey(e);
+									if (values.get(key) != null)
+										System.out.println(key + ": Log Value (" + p.getValue() + ") "
+												+ (p.getValue().equals(values.get(key)) ? "==" : "!=") + " Expected ("
+												+ values.get(key) + ")");
+								}
 							}
 						}
 					}

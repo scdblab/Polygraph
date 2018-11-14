@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -25,7 +24,6 @@ import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.DeleteManyModel;
 import com.mongodb.client.model.WriteModel;
 
-import edu.usc.polygraph.treemap.IntegerTreeType;
 import edu.usc.polygraph.treemap.Tree;
 import edu.usc.polygraph.treemap.TreeType;
 

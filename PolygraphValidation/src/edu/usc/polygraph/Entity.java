@@ -22,20 +22,6 @@ public class Entity {
 
 	}
 
-	// public Entity(String entityName, String entityKey) {
-	// for (int i = 0; i < TPCCConstants.ENTITY_NAMES.length; i++) {
-	// if (TPCCConstants.ENTITY_NAMES[i].equals(entityName)) {
-	// properties = new Property[TPCCConstants.ENTITY_PROPERTIES[i].length];
-	// for (int j = 0; j < TPCCConstants.ENTITY_PROPERTIES[i].length; j++) {
-	// properties[j] = new Property(TPCCConstants.ENTITY_PROPERTIES[i][j], "", TPCCConstants.NEW_VALUE_UPDATE);
-	// }
-	// break;
-	// }
-	// }
-	// this.key = entityKey;
-	// this.name = entityName;
-	// }
-
 	public String getKey() {
 		return key;
 	}
@@ -91,7 +77,6 @@ public class Entity {
 			}
 		}
 
-		String pValue = null;
 		int propIndex = -1;
 		for (int i = 0; i < ValidationParams.ENTITY_PROPERTIES[index].length; i++) {
 			if (ValidationParams.ENTITY_PROPERTIES[index][i].equals(pname)) {
