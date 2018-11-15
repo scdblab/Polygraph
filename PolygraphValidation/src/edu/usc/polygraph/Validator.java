@@ -1609,18 +1609,6 @@ public class Validator implements Callable<Integer> {
             for (int i = start; i < intervals.size(); i++) {
                 getParticipatingEntities(finalSS, participatingEntities, intervals.get(i));
             }
-			if (!willBeShrinked2.isEmpty()) {
-				getOverlapingIntervales(finalSS, vd, record, finalSS.endTime, record.getEndTime(), willBeShrinked2,
-						intervals);
-
-				willBeShrinked.addAll(willBeShrinked2);
-				willBeShrinked2.clear();
-
-			}
-			int preSize = participatingEntities.size();
-			for (int i = start; i < intervals.size(); i++) {
-				getParticipatingEntities(finalSS, participatingEntities, intervals.get(i));
-			}
 			if (participatingEntities.size() > preSize) {
 
 				// assert record.getStartTime() == finalSS.endTime : "";
